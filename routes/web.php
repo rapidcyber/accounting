@@ -6,7 +6,7 @@ use App\Livewire\Settings\Profile;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('filament.admin.pages.dashboard');
 })->name('home');
 
 Route::view('dashboard', 'dashboard')
@@ -19,6 +19,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
+    Route::get('export/expenses', [\App\Http\Controllers\ExpenseController::class, 'exportToExcel'])
+        ->name('export.expenses');
 });
 
 require __DIR__.'/auth.php';
