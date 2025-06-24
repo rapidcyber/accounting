@@ -23,6 +23,8 @@ class ExpenseResource extends Resource
     protected static ?string $model = Expense::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort = 1;
+
 
     public static function form(Form $form): Form
     {
@@ -131,17 +133,118 @@ class ExpenseResource extends Resource
                     ->color('gray')
                     ->icon('heroicon-o-calculator'),
                 // Action to generate report
-                Action::make('generateReport')
-                    ->label('Generate Report')
+                // Action::make('generateReport')
+                //     ->label('PREVIEW AND DOWNLOAD')
+                //     ->icon('heroicon-o-document-text')
+                //     ->color('success')
+                //     ->action(function ($livewire) {
+                //         // Handle the report generation logic here
+                //         self::handleReportGeneration($livewire);
+                //     }),
+                Action::make('viewDetails')
+                    ->label('PREVIEW AND DOWNLOAD')
                     ->icon('heroicon-o-document-text')
                     ->color('success')
-                    ->action(function ($livewire) {
-                        // Handle the report generation logic here
-                        self::handleReportGeneration($livewire);
-                    })
+                    ->modalHeading('Epenses Report')
+                    ->modalSubmitAction(false) // no submit button
+                    ->modalFooterActions([
+                        Action::make('print')
+                            ->label('PRINT')
+                            ->icon('heroicon-o-printer')
+                            ->color('primary')
+                            ->url(function ($livewire) {
+                                $period = $livewire->getTable()->getFilter('period')->getState();
+                                $dateRange = $livewire->getTable()->getFilter('date_range')->getState();
+                                $params = [
+                                    'type' => 'period',
+                                    'period' => $period['value'] ?? 'All',
+                                ];
+
+                                if ($dateRange['date_from'] && $dateRange['date_to']) {
+                                    $params = [
+                                        'type' => 'date_range',
+                                        'date_from' => $dateRange['date_from'],
+                                        'date_to' => $dateRange['date_to'],
+                                    ];
+                                }
+
+                                $query = http_build_query($params);
+
+                                return route('expenses.print', [], false) . '?' . $query;
+                            })
+                            ->openUrlInNewTab(),
+                        Action::make('generateReport')
+                            ->label('DOWNLOAD')
+                            ->icon('heroicon-o-document-text')
+                            ->color('success')
+                            ->action(function ($livewire) {
+                                // Handle the report generation logic here
+                                self::handleReportGeneration($livewire);
+                            }),
+
+                    ])
+                    ->modalCancelActionLabel('Close')
+
+                    ->modalContent(function($livewire){
+                        $period = $livewire->getTable()->getFilter('period')->getState();
+                        $dateRange = $livewire->getTable()->getFilter('date_range')->getState();
+                        $params = [
+                            'type' => 'period',
+                            'period' => $period['value'] ?? 'All',
+                        ];
+                        $query = Expense::query();
+                        if ($period['value']) {
+                            switch ($period) {
+                                case 'weekly':
+                                    return $query->whereBetween('date', [now()->startOfWeek(), now()->endOfWeek()]);
+                                case 'monthly':
+                                    return $query->whereMonth('date', now()->month);
+                                case 'quarterly':
+                                    return $query->whereQuarter('date', now()->quarter);
+                                case 'annually':
+                                    return $query->whereYear('date', now()->year);
+                            }
+                        }
+
+
+                        if ($dateRange['date_from'] && $dateRange['date_to']) {
+                            $params = [
+                                'type' => 'date_range',
+                                'date_from' => $dateRange['date_from'],
+                                'date_to' => $dateRange['date_to'],
+                            ];
+                        }
+
+                        $expenses = $query->get();
+
+                        return view('components.report', ['expenses' => $expenses]);
+                    }),
                     // ->url(route('reports.posts')) // replace with your route
                     // ->openUrlInNewTab(),
+                // Action::make('print')
+                //     ->label('Print')
+                //     ->icon('heroicon-o-printer')
+                //     ->url(function ($livewire) {
+                //         $period = $livewire->getTable()->getFilter('period')->getState();
+                //         $dateRange = $livewire->getTable()->getFilter('date_range')->getState();
+                //         $params = [
+                //             'type' => 'period',
+                //             'period' => $period['value'] ?? 'All',
+                //         ];
 
+                //         if ($dateRange['date_from'] && $dateRange['date_to']) {
+                //             $params = [
+                //                 'type' => 'date_range',
+                //                 'date_from' => $dateRange['date_from'],
+                //                 'date_to' => $dateRange['date_to'],
+                //             ];
+                //         }
+
+                //         $query = http_build_query($params);
+
+                //         return route('expenses.print', [], false) . '?' . $query;
+                //     })
+                //     ->openUrlInNewTab(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('period')
@@ -204,8 +307,9 @@ class ExpenseResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListExpenses::route('/'),
-            'create' => Pages\CreateExpense::route('/create'),
+            'list' => Pages\ListExpenses::route('/list'),
+            // 'create' => Pages\CreateExpense::route('/create'),
+            'index' => Pages\CreateExpense::route('/create'),
             'edit' => Pages\EditExpense::route('/{record}/edit'),
         ];
     }
@@ -231,6 +335,29 @@ class ExpenseResource extends Resource
         $query = http_build_query($params);
 
         return redirect()->to(route('export.expenses', [], false) . '?' . $query);
+    }
+    public static function handleReportPrint($livewire)
+    {
+        $period = $livewire->getTable()->getFilter('period')->getState();
+        $dateRange = $livewire->getTable()->getFilter('date_range')->getState();
+        $params = [
+            'type' => 'period',
+            'period' => $period['value'] ?? 'All',
+        ];
+
+        if($dateRange['date_from'] && $dateRange['date_to']) {
+            $params = [
+                'type' => 'date_range',
+                'date_from' => $dateRange['date_from'],
+                'date_to' => $dateRange['date_to'],
+            ];
+        }
+
+        // return Excel::download(new ExpensesExport($params), 'report_' . now()->format('Y-m-d') . '.xlsx');
+        // Redirect to a dedicated download route with parameters
+        $query = http_build_query($params);
+
+        return redirect()->to(route('expenses.print', [], false) . '?' . $query);
     }
 
 }

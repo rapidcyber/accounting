@@ -24,4 +24,25 @@ class ExpenseController extends Controller
             'expenses_'.now()->format('Y_m_d_H_i_s').'.xlsx'
         );
     }
+
+    public function print(Request $request){
+        // Get parameters from the request if needed
+        $parameters = $request->all();
+
+        // Fetch expenses based on parameters (customize as needed)
+        $expenses = Expense::query();
+
+        // Example: filter by date range if provided
+        if (!empty($parameters['from_date']) && !empty($parameters['to_date'])) {
+            $expenses->whereBetween('date', [$parameters['from_date'], $parameters['to_date']]);
+        }
+
+        $expenses = $expenses->get();
+
+        // Return a view for printing (create resources/views/expenses/print.blade.php)
+        return view('expenses.print', [
+            'expenses' => $expenses,
+            'parameters' => $parameters
+        ]);
+    }
 }

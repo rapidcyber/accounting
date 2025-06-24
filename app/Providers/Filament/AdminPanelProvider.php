@@ -17,6 +17,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Navigation\MenuItem;
+use App\Filament\Pages\ProfileSettings;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -27,6 +29,13 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->userMenuItems([
+                // Add custom link to user menu
+                'settings' => MenuItem::make()
+                    ->label('Settings')
+                    ->icon('heroicon-o-cog')
+                    ->url('profile-settings'),
+            ])
             ->colors([
                 'primary' => Color::Indigo,
             ])
@@ -38,6 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
+                ProfileSettings::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

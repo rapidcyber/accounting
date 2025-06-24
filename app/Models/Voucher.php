@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Expense extends Model
+class Voucher extends Model
 {
     use SoftDeletes;
 
-    public function vouchers()
+    public function expenses()
     {
-        return $this->belongsToMany(Voucher::class);
+        return $this->belongsToMany(Expense::class);
     }
 }
