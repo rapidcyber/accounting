@@ -11,6 +11,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
+use Filament\Actions\Action as BaseAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Select;
@@ -103,7 +105,21 @@ class VoucherResource extends Resource
                     ->modalSubmitAction(false)
                     ->modalContent(function($record){
                         return view('components.voucher', ['voucher' => $record]);
-                    }),
+                    })
+                    ->modalFooterActions([
+                        Action::make('print')
+                            ->label('PRINT')
+                            ->icon('heroicon-o-printer')
+                            ->color('primary')
+                            ->url(function ($record) {
+                                return route('voucher.print', ['id' => $record->id]);
+                            })
+                            ->openUrlInNewTab(),
+                        BaseAction::make('close')
+                            ->label('Close')
+                            ->color('gray')
+                            ->close(),
+                    ]),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\RestoreAction::make(),
                 Tables\Actions\ForceDeleteAction::make(),

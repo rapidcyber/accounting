@@ -5,6 +5,7 @@ use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\VoucherController;
 
 Route::get('/', function () {
     return redirect()->route('filament.admin.pages.dashboard');
@@ -24,6 +25,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('export.expenses');
     Route::get('expenses/print', [ExpenseController::class, 'print'])
         ->name('expenses.print');
+    Route::get('vourcher/print/{id}', [VoucherController::class, 'print'])
+        ->name('voucher.print');
 });
 
 require __DIR__.'/auth.php';
