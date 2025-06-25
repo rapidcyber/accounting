@@ -16,9 +16,12 @@ class ProfileSettings extends Page implements HasForms
 {
     use InteractsWithForms;
 
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static string $view = 'filament.pages.profile-settings';
+
+    protected static bool $shouldRegisterNavigation = false;
 
     public ?array $data = []; // 👈 ADD THIS
 

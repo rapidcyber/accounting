@@ -34,7 +34,7 @@ class AdminPanelProvider extends PanelProvider
                 'settings' => MenuItem::make()
                     ->label('Settings')
                     ->icon('heroicon-o-cog')
-                    ->url('profile-settings'),
+                    ->url('/admin/profile-settings'),
             ])
             ->colors([
                 'primary' => Color::Indigo,
@@ -45,14 +45,16 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(asset('images/favicon.ico'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->path('admin')
             ->pages([
                 Pages\Dashboard::class,
                 ProfileSettings::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                \App\Filament\Resources\ExpenseResource\Widgets\StatsOverview::class,
                 Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                // Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
