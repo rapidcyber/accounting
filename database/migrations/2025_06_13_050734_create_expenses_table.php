@@ -22,7 +22,7 @@ return new class extends Migration
             $table->enum('payment_method', ['cash', 'credit_card', 'debit_card', 'bank_transfer','e-wallet'])->default('cash');
             $table->decimal('discount', 10, 2)->default(0.00); // Optional discount field
             $table->decimal('tax', 10, 2)->default(0.00); // Optional tax field
-            $table->decimal('total_amount', 10, 2)->virtualAs('amount - discount + tax'); // Calculated field for total amount
+            $table->decimal('total_amount', 10, 2)->virtualAs('amount * quantity  - discount + tax'); // Calculated field for total amount
             $table->string('receipt_image')->nullable();
             $table->string('status')->default('pending'); // e.g., pending, approved, rejected
             $table->foreignId(('created_by'))

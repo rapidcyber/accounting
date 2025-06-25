@@ -55,7 +55,8 @@ class ExpenseResource extends Resource
                 Forms\Components\TextInput::make('amount')
                     ->label('Amount')
                     ->numeric()
-                    ->reactive()
+                    ->lazy()
+                    // ->reactive()
                     ->afterStateUpdated(function ($state, callable $get, callable $set) {
                         // When the amount changes, get the current quantity (or default to 0)
                         $quantity = (float) ($get('quantity') ?? 0);
@@ -65,7 +66,6 @@ class ExpenseResource extends Resource
                     ->required(),
 
                 Forms\Components\TextInput::make('total_amount')
-                    ->debounce(2000)
                     ->label('Total Amount')
                     ->numeric()
                     // Disable the field so it helps act as read-only,
@@ -308,11 +308,18 @@ class ExpenseResource extends Resource
     {
         return [
             'list' => Pages\ListExpenses::route('/list'),
-            // 'create' => Pages\CreateExpense::route('/create'),
-            'index' => Pages\CreateExpense::route('/create'),
+            'create' => Pages\CreateExpense::route('/create'),
+            'index' => Pages\ListExpenses::route('/'),
             'edit' => Pages\EditExpense::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationUrl(): string
+    {
+        return static::getUrl('create');
+    }
+
+
     public static function handleReportGeneration($livewire)
     {
         $period = $livewire->getTable()->getFilter('period')->getState();
