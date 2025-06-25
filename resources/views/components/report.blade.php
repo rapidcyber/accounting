@@ -35,7 +35,9 @@
                 <tr>
                     <td style="text-align: center">{{ $expense->id }}</td>
                     <td style="text-align: center">{{ \Carbon\Carbon::parse($expense->date)->format('m/d/Y') }}</td>
-                    <td style="text-align: center">{{ $expense->quantity }}</td>
+                    <td style="text-align: center">
+                        {{ fmod($expense->quantity, 1) == 0 ? number_format($expense->quantity, 0) : $expense->quantity }}
+                    </td>
                     <td style="text-align: center">{{ ucfirst($expense->unit) }}</td>
                     <td>{{ $expense->description }}</td>
                     <td style="text-align: right">&#8369; {{ number_format($expense->amount, 2) }}</td>

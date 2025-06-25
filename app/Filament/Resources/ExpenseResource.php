@@ -109,8 +109,20 @@ class ExpenseResource extends Resource
                     ->label('Date')
                     ->date()
                     ->sortable(),
-                TextColumn::make('payment_method')
-                    ->formatStateUsing(fn ($state) => ucfirst($state)),
+                TextColumn::make('quantity')
+                    ->label('Quantity')
+                    ->formatStateUsing(function ($state) {
+                        // If the value is a whole number, show without decimals
+                        return (is_numeric($state) && floor($state) == $state)
+                            ? number_format($state, 0)
+                            : $state;
+                    })
+                    ->alignCenter(),
+                TextColumn::make('total_amount')
+                    ->label('Total Amount')
+                    ->money('PHP', true)
+                    ->alignCenter()
+                    ->sortable(),
                 // Tables\Columns\TextColumn::make('receipt_image')
                 //     ->label('Receipt Image')
                 //     // ->url(fn (Expense $record) => $record->receipt_image ? asset('storage/' . $record->receipt_image) : null)
@@ -132,15 +144,7 @@ class ExpenseResource extends Resource
                     ->disabled()
                     ->color('gray')
                     ->icon('heroicon-o-calculator'),
-                // Action to generate report
-                // Action::make('generateReport')
-                //     ->label('PREVIEW AND DOWNLOAD')
-                //     ->icon('heroicon-o-document-text')
-                //     ->color('success')
-                //     ->action(function ($livewire) {
-                //         // Handle the report generation logic here
-                //         self::handleReportGeneration($livewire);
-                //     }),
+
                 Action::make('viewDetails')
                     ->label('PREVIEW AND DOWNLOAD')
                     ->icon('heroicon-o-document-text')
@@ -219,32 +223,7 @@ class ExpenseResource extends Resource
 
                         return view('components.report', ['expenses' => $expenses]);
                     }),
-                    // ->url(route('reports.posts')) // replace with your route
-                    // ->openUrlInNewTab(),
-                // Action::make('print')
-                //     ->label('Print')
-                //     ->icon('heroicon-o-printer')
-                //     ->url(function ($livewire) {
-                //         $period = $livewire->getTable()->getFilter('period')->getState();
-                //         $dateRange = $livewire->getTable()->getFilter('date_range')->getState();
-                //         $params = [
-                //             'type' => 'period',
-                //             'period' => $period['value'] ?? 'All',
-                //         ];
 
-                //         if ($dateRange['date_from'] && $dateRange['date_to']) {
-                //             $params = [
-                //                 'type' => 'date_range',
-                //                 'date_from' => $dateRange['date_from'],
-                //                 'date_to' => $dateRange['date_to'],
-                //             ];
-                //         }
-
-                //         $query = http_build_query($params);
-
-                //         return route('expenses.print', [], false) . '?' . $query;
-                //     })
-                //     ->openUrlInNewTab(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('period')
