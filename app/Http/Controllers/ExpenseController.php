@@ -28,13 +28,12 @@ class ExpenseController extends Controller
     public function print(Request $request){
         // Get parameters from the request if needed
         $parameters = $request->all();
-
         // Fetch expenses based on parameters (customize as needed)
         $expenses = Expense::query();
 
         // Example: filter by date range if provided
-        if (!empty($parameters['from_date']) && !empty($parameters['to_date'])) {
-            $expenses->whereBetween('date', [$parameters['from_date'], $parameters['to_date']]);
+        if (!empty($parameters['date_from'])) {
+            $expenses->whereBetween('date', [$parameters['date_from'], $parameters['date_to']]);
         }
 
         $expenses = $expenses->get();

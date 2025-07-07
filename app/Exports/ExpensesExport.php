@@ -25,35 +25,7 @@ class ExpensesExport implements FromCollection, WithHeadings, WithEvents
     {
         $expenses = Expense::query();
         $params = $this->parameters;
-        $args = [];
-        if($params['type'] == 'period') {
-
-            $arg = $params;
-
-            switch ($arg == 'weekly') {
-                case 'weekly':
-                    $args['start_date'] = now()->startOfWeek();
-                    $args['end_date'] = now()->endOfWeek();
-                    break;
-                case 'monthly':
-                    $args['start_date'] = now()->startOfMonth();
-                    $args['end_date'] = now()->endOfMonth();
-                    break;
-                case 'quarterly':
-                    $args['start_date'] = now()->startOfQuarter();
-                    $args['end_date'] = now()->endOfQuarter();
-                    break;
-                case 'yearly':
-                    $args['start_date'] = now()->startOfYear();
-                    $args['end_date'] = now()->endOfYear();
-                    break;
-                default:
-                    $args['start_date'] = null;
-                    $args['end_date'] = null;
-            }
-
-            // return Expense::whereBetween('date', [$args['start_date'], $args['end_date']])->get();
-        }
+        $args = $params;
         $expenses = $expenses->select(
             'id',
             \DB::raw("DATE_FORMAT(date, '%m/%d/%Y') as date"),
@@ -63,10 +35,10 @@ class ExpensesExport implements FromCollection, WithHeadings, WithEvents
             'amount',
             'total_amount'
         )->when(
-            $args['start_date'] ?? null,
+            $args['date_from'] ?? null,
             fn ($query, $dateFrom) => $query->whereDate('date', '>=', $dateFrom)
         )->when(
-            $args['end_date'] ?? null,
+            $args['date_to'] ?? null,
             fn ($query, $dateTo) => $query->whereDate('date', '<=', $dateTo)
         );
 

@@ -34,13 +34,16 @@ class ExpenseResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('quantity')
                     ->label('Quantity')
-                    ->numeric()
-                    ->reactive()
+                    ->numeric()           // Ensures only numbers
+                    ->step(1)             // Disables decimal input
+                    ->inputMode('numeric') // Shows numeric keyboard on mobile
+                    ->rules(['integer', 'min:0'])
+                    ->lazy()
                     ->afterStateUpdated(function ($state, callable $get, callable $set) {
                         // When the quantity changes, get the current amount (or default to 0)
-                        $amount = (float) ($get('amount') ?? 0);
+                        $amount = $get('amount') ?? 0;
                         // Multiply the two values and update total_amount
-                        $set('total_amount', ((float) $state) * $amount);
+                        $set('total_amount', $state * $amount);
                     })
                     ->required(),
                 Forms\Components\TextInput::make('unit')
@@ -59,7 +62,7 @@ class ExpenseResource extends Resource
                     // ->reactive()
                     ->afterStateUpdated(function ($state, callable $get, callable $set) {
                         // When the amount changes, get the current quantity (or default to 0)
-                        $quantity = (float) ($get('quantity') ?? 0);
+                        $quantity = $get('quantity') ?? 0;
                         // Multiply the two values and update total_amount
                         $set('total_amount', ((float) $state) * $quantity);
                     })
@@ -137,8 +140,49 @@ class ExpenseResource extends Resource
             ->headerActions([
                 // Grand Total display
                 Action::make('grandTotal')
-                    ->label(function () {
-                        $total = Expense::query()->sum('total_amount');
+                    ->label(function ($livewire) {
+                        $period = $livewire->getTable()->getFilter('period')->getState();
+                        $dateRange = $livewire->getTable()->getFilter('date_range')->getState();
+                        $params = [
+                            'date_from' => $dateRange['date_from'],
+                            'date_to' => $dateRange['date_to'],
+                        ];
+
+                        if(!is_null($period['value'])){
+                            switch ($period['value']) {
+                                case 'weekly':
+                                    $params = [
+                                        'date_from' => now()->startOfWeek(),
+                                        'date_to' => now()->endOfWeek(),
+                                    ];
+                                    break;
+                                case 'monthly':
+                                    $params = [
+                                        'date_from' => now()->startOfMonth(),
+                                        'date_to' => now()->endOfMonth(),
+                                    ];
+                                    break;
+                                case 'quarterly':
+                                    $params = [
+                                        'date_from' => now()->startOfQuarter(),
+                                        'date_to' => now()->endOfQuarter(),
+                                    ];
+                                    break;
+                                case 'yearly':
+                                    # code...
+                                    break;
+                            }
+                        }
+                        $total = Expense::query();
+
+                        if(!is_null($params['date_from'])){
+                            $total->whereBetween('date',[$params['date_from'], $params['date_to']]);
+                        }
+
+                        $total = $total->sum('total_amount');
+
+
+
                         return 'Grand Total: ₱' . number_format($total, 2);
                     })
                     ->disabled()
@@ -160,16 +204,37 @@ class ExpenseResource extends Resource
                                 $period = $livewire->getTable()->getFilter('period')->getState();
                                 $dateRange = $livewire->getTable()->getFilter('date_range')->getState();
                                 $params = [
-                                    'type' => 'period',
-                                    'period' => $period['value'] ?? 'All',
+                                    'date_from' => $dateRange['date_from'],
+                                    'date_to' => $dateRange['date_to'],
                                 ];
 
-                                if ($dateRange['date_from'] && $dateRange['date_to']) {
-                                    $params = [
-                                        'type' => 'date_range',
-                                        'date_from' => $dateRange['date_from'],
-                                        'date_to' => $dateRange['date_to'],
-                                    ];
+                                if(!is_null($period['value'])){
+                                    switch ($period['value']) {
+                                        case 'weekly':
+                                            $params = [
+                                                'date_from' => now()->startOfWeek()->format('Y-m-d'),
+                                                'date_to' => now()->endOfWeek()->format('Y-m-d'),
+                                            ];
+                                            break;
+                                        case 'monthly':
+                                            $params = [
+                                                'date_from' => now()->startOfMonth()->format('Y-m-d'),
+                                                'date_to' => now()->endOfMonth()->format('Y-m-d'),
+                                            ];
+                                            break;
+                                        case 'quarterly':
+                                            $params = [
+                                                'date_from' => now()->startOfQuarter()->format('Y-m-d'),
+                                                'date_to' => now()->endOfQuarter()->format('Y-m-d')
+                                            ];
+                                            break;
+                                        case 'yearly':
+                                            $params = [
+                                                'date_from' => now()->startOfYear()->format('Y-m-d'),
+                                                'date_to' => now()->endOfYear()->format('Y-m-d')
+                                            ];
+                                            break;
+                                    }
                                 }
 
                                 $query = http_build_query($params);
@@ -192,34 +257,43 @@ class ExpenseResource extends Resource
                     ->modalContent(function($livewire){
                         $period = $livewire->getTable()->getFilter('period')->getState();
                         $dateRange = $livewire->getTable()->getFilter('date_range')->getState();
-                        $params = [
-                            'type' => 'period',
-                            'period' => $period['value'] ?? 'All',
-                        ];
                         $query = Expense::query();
-                        if ($period['value']) {
-                            switch ($period) {
+                        $params = [
+                            'date_from' => $dateRange['date_from'],
+                            'date_to' => $dateRange['date_to'],
+                        ];
+
+                        if(!is_null($period['value'])){
+                            switch ($period['value']) {
                                 case 'weekly':
-                                    return $query->whereBetween('date', [now()->startOfWeek(), now()->endOfWeek()]);
+                                    $params = [
+                                        'date_from' => now()->startOfWeek(),
+                                        'date_to' => now()->endOfWeek(),
+                                    ];
+                                    break;
                                 case 'monthly':
-                                    return $query->whereMonth('date', now()->month);
+                                    $params = [
+                                        'date_from' => now()->startOfMonth(),
+                                        'date_to' => now()->endOfMonth(),
+                                    ];
+                                    break;
                                 case 'quarterly':
-                                    return $query->whereQuarter('date', now()->quarter);
-                                case 'annually':
-                                    return $query->whereYear('date', now()->year);
+                                    $params = [
+                                        'date_from' => now()->startOfQuarter(),
+                                        'date_to' => now()->endOfQuarter(),
+                                    ];
+                                    break;
+                                case 'yearly':
+                                    # code...
+                                    break;
                             }
                         }
 
-
-                        if ($dateRange['date_from'] && $dateRange['date_to']) {
-                            $params = [
-                                'type' => 'date_range',
-                                'date_from' => $dateRange['date_from'],
-                                'date_to' => $dateRange['date_to'],
-                            ];
-                        }
-
                         $expenses = $query->get();
+
+                        if(!is_null($params['date_from'])){
+                            $expenses = $expenses->whereBetween('date', array_values($params));
+                        }
 
                         return view('components.report', ['expenses' => $expenses]);
                     }),
@@ -244,7 +318,7 @@ class ExpenseResource extends Resource
                                 case 'monthly':
                                     return $query->whereMonth('date', now()->month);
                                 case 'quarterly':
-                                    return $query->whereQuarter('date', now()->quarter);
+                                    return $query->whereBetween('date', [now()->firstOfQuarter(), now()->lastOfQuarter()]);
                                 case 'annually':
                                     return $query->whereYear('date', now()->year);
                             }
@@ -304,16 +378,37 @@ class ExpenseResource extends Resource
         $period = $livewire->getTable()->getFilter('period')->getState();
         $dateRange = $livewire->getTable()->getFilter('date_range')->getState();
         $params = [
-            'type' => 'period',
-            'period' => $period['value'] ?? 'All',
+            'date_from' => $dateRange['date_from'],
+            'date_to' => $dateRange['date_to'],
         ];
 
-        if($dateRange['date_from'] && $dateRange['date_to']) {
-            $params = [
-                'type' => 'date_range',
-                'date_from' => $dateRange['date_from'],
-                'date_to' => $dateRange['date_to'],
-            ];
+        if(!is_null($period['value'])){
+            switch ($period['value']) {
+                case 'weekly':
+                    $params = [
+                        'date_from' => now()->startOfWeek()->format('Y-m-d'),
+                        'date_to' => now()->endOfWeek()->format('Y-m-d'),
+                    ];
+                    break;
+                case 'monthly':
+                    $params = [
+                        'date_from' => now()->startOfMonth()->format('Y-m-d'),
+                        'date_to' => now()->endOfMonth()->format('Y-m-d'),
+                    ];
+                    break;
+                case 'quarterly':
+                    $params = [
+                        'date_from' => now()->startOfQuarter()->format('Y-m-d'),
+                        'date_to' => now()->endOfQuarter()->format('Y-m-d')
+                    ];
+                    break;
+                case 'yearly':
+                    $params = [
+                        'date_from' => now()->startOfYear()->format('Y-m-d'),
+                        'date_to' => now()->endOfYear()->format('Y-m-d')
+                    ];
+                    break;
+            }
         }
 
         // return Excel::download(new ExpensesExport($params), 'report_' . now()->format('Y-m-d') . '.xlsx');
@@ -327,16 +422,37 @@ class ExpenseResource extends Resource
         $period = $livewire->getTable()->getFilter('period')->getState();
         $dateRange = $livewire->getTable()->getFilter('date_range')->getState();
         $params = [
-            'type' => 'period',
-            'period' => $period['value'] ?? 'All',
+            'date_from' => $dateRange['date_from'],
+            'date_to' => $dateRange['date_to'],
         ];
 
-        if($dateRange['date_from'] && $dateRange['date_to']) {
-            $params = [
-                'type' => 'date_range',
-                'date_from' => $dateRange['date_from'],
-                'date_to' => $dateRange['date_to'],
-            ];
+        if(!is_null($period['value'])){
+            switch ($period['value']) {
+                case 'weekly':
+                    $params = [
+                        'date_from' => now()->startOfWeek()->format('Y-m-d'),
+                        'date_to' => now()->endOfWeek()->format('Y-m-d'),
+                    ];
+                    break;
+                case 'monthly':
+                    $params = [
+                        'date_from' => now()->startOfMonth()->format('Y-m-d'),
+                        'date_to' => now()->endOfMonth()->format('Y-m-d'),
+                    ];
+                    break;
+                case 'quarterly':
+                    $params = [
+                        'date_from' => now()->startOfQuarter()->format('Y-m-d'),
+                        'date_to' => now()->endOfQuarter()->format('Y-m-d')
+                    ];
+                    break;
+                case 'yearly':
+                    $params = [
+                        'date_from' => now()->startOfYear()->format('Y-m-d'),
+                        'date_to' => now()->endOfYear()->format('Y-m-d')
+                    ];
+                    break;
+            }
         }
 
         // return Excel::download(new ExpensesExport($params), 'report_' . now()->format('Y-m-d') . '.xlsx');

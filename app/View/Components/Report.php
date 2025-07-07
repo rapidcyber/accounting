@@ -15,7 +15,6 @@ class Report extends Component
     public function __construct($expenses)
     {
         $this->expenses = json_decode($expenses);
-        dd(json_decode($expenses));
     }
 
     /**
