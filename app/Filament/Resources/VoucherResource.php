@@ -35,6 +35,9 @@ class VoucherResource extends Resource
                 Select::make('expenses')
                     ->label('Expenses')
                     ->relationship('expenses', 'description')
+                    ->getOptionLabelFromRecordUsing(fn ($record) =>
+                        $record->description . ' - ' . $record->created_at->format('M d, Y')
+                    )
                     ->placeholder('Select expenses')
                     ->multiple()
                     ->searchable()

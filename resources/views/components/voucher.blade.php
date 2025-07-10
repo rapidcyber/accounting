@@ -45,12 +45,12 @@
                 @foreach ($voucher->expenses as $item)
                 <tr>
                     <td style="border: 1px solid black;">{{$item->description}} ( {{$item->quantity .' '. $item->unit}} ) </td>
-                    <td style="border: 1px solid black; text-align:right">&#8369; {{number_format($item->total_amount, 2)}}</td>
+                    <td style="border: 1px solid black; text-align:right"> {{number_format($item->total_amount, 2)}}</td>
                 </tr>
                 @endforeach
                 <tr style="font-weight: bold">
                     <td style="border: 1px solid black; text-align:right">TOTAL</td>
-                    <td style="border: 1px solid black; text-align:right">&#8369; {{number_format($voucher->expenses->sum('total_amount'), 2)}}</td>
+                    <td style="border: 1px solid black; text-align:right"> {{number_format($voucher->expenses->sum('total_amount'), 2)}}</td>
                 </tr>
                 </tbody>
             </table>

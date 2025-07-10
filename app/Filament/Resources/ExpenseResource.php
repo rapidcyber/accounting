@@ -123,7 +123,6 @@ class ExpenseResource extends Resource
                     ->alignCenter(),
                 TextColumn::make('total_amount')
                     ->label('Total Amount')
-                    ->money('PHP', true)
                     ->alignCenter()
                     ->sortable(),
                 // Tables\Columns\TextColumn::make('receipt_image')
@@ -183,7 +182,7 @@ class ExpenseResource extends Resource
 
 
 
-                        return 'Grand Total: ₱' . number_format($total, 2);
+                        return 'Grand Total: ' . number_format($total, 2);
                     })
                     ->disabled()
                     ->color('gray')

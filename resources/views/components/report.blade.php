@@ -40,8 +40,8 @@
                     </td>
                     <td style="text-align: center">{{ ucfirst($expense->unit) }}</td>
                     <td>{{ $expense->description }}</td>
-                    <td style="text-align: right">&#8369; {{ number_format($expense->amount, 2) }}</td>
-                    <td style="text-align: right">&#8369; {{ number_format($expense->total_amount, 2) }}</td>
+                    <td style="text-align: right"> {{ number_format($expense->amount, 2) }}</td>
+                    <td style="text-align: right"> {{ number_format($expense->total_amount, 2) }}</td>
                 </tr>
             @endforeach
                 <tr>
@@ -52,7 +52,7 @@
                     <td></td>
                     <td style="text-align: right; font-weight: bold;">GRAND TOTAL: </td>
                     <td style="text-align: right; font-weight: bold;">
-                        &#8369; {{ number_format($expenses->sum('total_amount'), 2) }}
+                         {{ number_format($expenses->sum('total_amount'), 2) }}
                     </td>
                 </tr>
         </tbody>
