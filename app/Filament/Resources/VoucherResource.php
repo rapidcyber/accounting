@@ -13,6 +13,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Actions\Action as BaseAction;
+use Filament\Tables\Actions\BulkAction;
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Select;
@@ -112,7 +114,8 @@ class VoucherResource extends Resource
                             ->icon('heroicon-o-printer')
                             ->color('primary')
                             ->url(function ($record) {
-                                return route('voucher.print', ['id' => $record->id]);
+                                session()->put('print_user_ids', [$record->id]);
+                                return route('vouchers.print');
                             })
                             ->openUrlInNewTab(),
                         BaseAction::make('close')
@@ -130,6 +133,18 @@ class VoucherResource extends Resource
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
+                BulkAction::make('print')
+                ->label('Print')
+                ->icon('heroicon-m-printer')
+                ->requiresConfirmation()
+                ->action(function (Collection $records) {
+                    // Store selected record IDs in the session
+                    session()->put('print_user_ids', $records->pluck('id')->toArray());
+                })
+                ->after(function () {
+                    // Redirect to print preview route
+                    return redirect()->route('vouchers.print');
+                }),
             ]);
     }
 

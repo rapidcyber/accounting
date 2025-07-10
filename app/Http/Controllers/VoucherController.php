@@ -7,11 +7,13 @@ use App\Models\Voucher;
 
 class VoucherController extends Controller
 {
-    public function print($voucherId)
+    public function print()
     {
-        $voucher = Voucher::find($voucherId);
+        $ids = session()->pull('print_user_ids', []);
 
-        return view('vouchers.print', ['voucher' => $voucher]);
+        $vouchers = Voucher::whereIn('id', $ids)->get();
+
+        return view('vouchers.print', ['vouchers' => $vouchers]);
     }
 
 }

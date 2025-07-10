@@ -25,8 +25,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('export.expenses');
     Route::get('expenses/print', [ExpenseController::class, 'print'])
         ->name('expenses.print');
-    Route::get('vourcher/print/{id}', [VoucherController::class, 'print'])
-        ->name('voucher.print');
+    Route::get('vourchers/print/', [VoucherController::class, 'print'])
+        ->name('vouchers.print');
 });
 
 require __DIR__.'/auth.php';
