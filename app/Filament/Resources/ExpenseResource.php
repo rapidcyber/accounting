@@ -106,7 +106,7 @@ class ExpenseResource extends Resource
                     ->sortable(),
                 TextColumn::make('amount')
                     ->label('Amount')
-                    ->money('PHP', true)
+                    ->formatStateUsing(fn ($state) => number_format($state, 2))
                     ->sortable(),
                 TextColumn::make('date')
                     ->label('Date')
@@ -124,6 +124,7 @@ class ExpenseResource extends Resource
                 TextColumn::make('total_amount')
                     ->label('Total Amount')
                     ->alignCenter()
+                    ->formatStateUsing(fn ($state) => number_format($state, 2)) // <-- key part
                     ->sortable(),
                 // Tables\Columns\TextColumn::make('receipt_image')
                 //     ->label('Receipt Image')
