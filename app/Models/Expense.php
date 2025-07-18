@@ -13,4 +13,9 @@ class Expense extends Model
     {
         return $this->belongsToMany(Voucher::class);
     }
+
+    public function budgets()
+    {
+        return $this->belongsToMany(Budget::class);
+    }
 }

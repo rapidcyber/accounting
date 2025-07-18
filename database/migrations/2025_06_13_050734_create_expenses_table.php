@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('category')->nullable();
             $table->decimal('quantity', 10, 2)->default(1);
             $table->string('unit')->nullable(); // e.g., 'pcs', 'kg', 'liters'
-            $table->enum('payment_method', ['cash', 'credit_card', 'debit_card', 'bank_transfer','e-wallet'])->default('cash');
+            $table->enum('payment_method', ['cash', 'e-wallet', 'check', 'bank_transfer', 'debit_card', 'credit_card'])->default('cash');
             $table->decimal('discount', 10, 2)->default(0.00); // Optional discount field
             $table->decimal('tax', 10, 2)->default(0.00); // Optional tax field
             $table->decimal('total_amount', 10, 2)->virtualAs('amount * quantity  - discount + tax'); // Calculated field for total amount

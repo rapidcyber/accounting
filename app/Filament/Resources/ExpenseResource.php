@@ -13,10 +13,11 @@ use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
-use App\Exports\ExpensesExport;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use PhpOffice\PhpSpreadsheet\Calculation\MathTrig\Exp;
+use App\Models\Budget;
+// use App\Exports\ExpensesExport;
+// use Maatwebsite\Excel\Facades\Excel;
+// use Illuminate\Database\Eloquent\SoftDeletingScope;
+// use PhpOffice\PhpSpreadsheet\Calculation\MathTrig\Exp;
 
 class ExpenseResource extends Resource
 {
@@ -78,10 +79,11 @@ class ExpenseResource extends Resource
                 Forms\Components\Select::make('payment_method')
                     ->options([
                         'cash' => 'Cash',
-                        'credit_card' => 'Credit Card',
-                        'debit_card' => 'Debit Card',
-                        'bank_transfer' => 'Bank Transfer',
                         'e-wallet' => 'E-Wallet',
+                        'check' => 'Check',
+                        'bank_transfer' => 'Bank Transfer',
+                        'debit_card' => 'Debit Card',
+                        'credit_card' => 'Credit Card',
                     ])
                     ->default('cash'),
                 Forms\Components\FileUpload::make('receipt_image')
@@ -138,6 +140,15 @@ class ExpenseResource extends Resource
 
             ])
             ->headerActions([
+                //Budget Balance display
+                Action::make('budgetBalance')
+                    ->label(function () {
+                        $budgetBalance = Budget::latest()->first()->amount ?? 0;
+                        return 'Budget Balance: '. number_format($budgetBalance, 2);
+                    })
+                    ->disabled()
+                    ->icon('heroicon-o-wallet')
+                    ->color('gray'),
                 // Grand Total display
                 Action::make('grandTotal')
                     ->label(function ($livewire) {
@@ -341,13 +352,49 @@ class ExpenseResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->before(function ($action, $record) {
+
+                        $budget = $record->budgets->first();
+                        $lastBudget = $budget ? $record->budgets->first()->amount : 0;
+                        $beforeBudget = $lastBudget + $record->amount;
+                        $budget->amount = $beforeBudget;
+                        if ($budget->save()) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Budget Updated!')
+                                ->success()
+                                ->body('The budget has been updated successfully.')
+                                ->send();
+                        }
+                        // Check if the record is trashed
+                        if (method_exists($record, 'trashed') && $record->trashed()) {
+                            $action->hidden();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->before(function ($action, $records) {
+                            foreach ($records as $record) {
+                                $budget = $record->budgets->first();
+                                if ($budget) {
+                                    $lastBudget = $budget->amount;
+                                    $beforeBudget = $lastBudget + $record->amount;
+                                    $budget->amount = $beforeBudget;
+                                    if ($budget->save()) {
+                                        \Filament\Notifications\Notification::make()
+                                            ->title('Budget Updated!')
+                                            ->success()
+                                            ->body('The budget for this expense has been updated successfully.')
+                                            ->send();
+                                    }
+                                }
+                            }
+                        }),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getRelations(): array

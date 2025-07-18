@@ -21,11 +21,12 @@
     <table border="1" cellpadding="8" cellspacing="0" width="100%">
         <thead>
             <tr style="background-color: #e0e0e0;">
-                <th>ID</th>
+
                 <th>DATE</th>
-                <th>QUANTITY</th>
+                <th>QTY</th>
                 <th>UNIT</th>
                 <th>DESCRIPTION</th>
+                <th style="text-align: center">PAYMENT METHOD</th>
                 <th>AMOUNT</th>
                 <th>TOTAL AMOUNT</th>
             </tr>
@@ -33,13 +34,13 @@
         <tbody>
             @foreach($expenses as $expense)
                 <tr>
-                    <td style="text-align: center">{{ $expense->id }}</td>
                     <td style="text-align: center">{{ \Carbon\Carbon::parse($expense->date)->format('m/d/Y') }}</td>
                     <td style="text-align: center">
                         {{ fmod($expense->quantity, 1) == 0 ? number_format($expense->quantity, 0) : $expense->quantity }}
                     </td>
                     <td style="text-align: center">{{ ucfirst($expense->unit) }}</td>
                     <td>{{ $expense->description }}</td>
+                    <td style="text-align: center">{{ ucfirst($expense->payment_method) }}</td>
                     <td style="text-align: right"> {{ number_format($expense->amount, 2) }}</td>
                     <td style="text-align: right"> {{ number_format($expense->total_amount, 2) }}</td>
                 </tr>

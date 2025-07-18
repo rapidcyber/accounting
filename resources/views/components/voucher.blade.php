@@ -38,13 +38,16 @@
                 <thead>
                 <tr>
                     <th style="text-align: center; border: 1px solid black; width: 80%;">PARTICULARS</th>
+                    <th style="text-align: center; border: 1px solid black; width: 20%;">PAID BY</th>
                     <th style="text-align: center; border: 1px solid black;">AMOUNT</th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach ($voucher->expenses as $item)
                 <tr>
-                    <td style="border: 1px solid black;">{{$item->description}} ( {{$item->quantity .' '. $item->unit}} ) </td>
+                    <td style="border: 1px solid black;">( {{$item->quantity .' '. $item->unit}} ) {{$item->description}} </td>
+                    <td style="border: 1px solid black; text-align:center">
+                        {{ucfirst($item->payment_method)}}
                     <td style="border: 1px solid black; text-align:right"> {{number_format($item->total_amount, 2)}}</td>
                 </tr>
                 @endforeach
