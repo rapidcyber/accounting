@@ -72,7 +72,12 @@ class BudgetResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->before(function ($action, $records) {
+                            foreach ($records as $record) {
+                                $record->expenses()->detach();
+                            }
+                        }),
                 ]),
             ])
             ->defaultSort('date', 'desc');

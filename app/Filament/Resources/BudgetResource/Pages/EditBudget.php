@@ -13,7 +13,10 @@ class EditBudget extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+            ->before(function () {
+                $this->record->expenses()->detach();
+            }),
         ];
     }
 }
