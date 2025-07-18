@@ -357,7 +357,7 @@ class ExpenseResource extends Resource
 
                         $budget = $record->budgets->first();
                         $lastBudget = $budget ? $record->budgets->first()->amount : 0;
-                        $beforeBudget = $lastBudget + $record->amount;
+                        $beforeBudget = $lastBudget + $record->total_amount;
                         $budget->amount = $beforeBudget;
                         if ($budget->save()) {
                             \Filament\Notifications\Notification::make()
@@ -380,7 +380,7 @@ class ExpenseResource extends Resource
                                 $budget = $record->budgets->first();
                                 if ($budget) {
                                     $lastBudget = $budget->amount;
-                                    $beforeBudget = $lastBudget + $record->amount;
+                                    $beforeBudget = $lastBudget + $record->total_amount;
                                     $budget->amount = $beforeBudget;
                                     if ($budget->save()) {
                                         \Filament\Notifications\Notification::make()

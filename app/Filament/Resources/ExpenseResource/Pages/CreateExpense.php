@@ -61,7 +61,7 @@ class CreateExpense extends CreateRecord
         $latestBudget = Budget::latest()->first();
         if ($latestBudget) {
 
-            $newBudgetAmount = $latestBudget->amount - ($this->data['amount'] ?? 0);
+            $newBudgetAmount = $latestBudget->amount - ($this->data['total_amount'] ?? 0);
 
             $newBudget = new Budget(
                 [

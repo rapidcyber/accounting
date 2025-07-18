@@ -30,8 +30,8 @@ class EditExpense extends EditRecord
     protected function beforeSave(): void
     {
         $lastBudget = $this->record->budgets->first()->amount ?? 0;
-        $beforeBudget = $lastBudget + $this->record->amount;
-        $expenseAmount = $this->data['amount'] ?? 0;
+        $beforeBudget = $lastBudget + $this->record->total_amount;
+        $expenseAmount = $this->data['total_amount'] ?? 0;
         if ($lastBudget) {
             if ($beforeBudget < $expenseAmount) {
                 \Filament\Notifications\Notification::make()
