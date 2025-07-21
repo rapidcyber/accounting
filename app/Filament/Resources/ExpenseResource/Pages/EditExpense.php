@@ -23,7 +23,23 @@ class EditExpense extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+            ->before(function ($action, $record) {
+
+                $budget = $record->budgets->first();
+                $lastBudget = $budget ? $record->budgets->first()->amount : 0;
+                $beforeBudget = $lastBudget + $record->total_amount;
+                if($budget) {
+                    $budget->amount = $beforeBudget;
+                    if ($budget->save()) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Budget Updated!')
+                            ->success()
+                            ->body('The budget has been updated successfully.')
+                            ->send();
+                    }
+                }
+            }),
         ];
     }
 
