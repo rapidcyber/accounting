@@ -358,14 +358,17 @@ class ExpenseResource extends Resource
                         $budget = $record->budgets->first();
                         $lastBudget = $budget ? $record->budgets->first()->amount : 0;
                         $beforeBudget = $lastBudget + $record->total_amount;
-                        $budget->amount = $beforeBudget;
-                        if ($budget->save()) {
-                            \Filament\Notifications\Notification::make()
-                                ->title('Budget Updated!')
-                                ->success()
-                                ->body('The budget has been updated successfully.')
-                                ->send();
+                        if($budget) {
+                            $budget->amount = $beforeBudget;
+                            if ($budget->save()) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Budget Updated!')
+                                    ->success()
+                                    ->body('The budget has been updated successfully.')
+                                    ->send();
+                            }
                         }
+
                         // Check if the record is trashed
                         if (method_exists($record, 'trashed') && $record->trashed()) {
                             $action->hidden();
