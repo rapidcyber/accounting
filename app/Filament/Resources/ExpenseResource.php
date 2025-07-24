@@ -306,7 +306,7 @@ class ExpenseResource extends Resource
                             $expenses = $expenses->whereBetween('date', array_values($params));
                         }
 
-                        return view('components.report', ['expenses' => $expenses]);
+                        return view('components.report', ['expenses' => $expenses, 'budgetBalance' => Budget::latest()->first()->amount ?? 0]);
                     }),
 
             ])

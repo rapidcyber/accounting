@@ -4,6 +4,7 @@ namespace App\Filament\Resources\BudgetResource\Pages;
 
 use App\Filament\Resources\BudgetResource;
 use Filament\Actions;
+use App\Models\Budget;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateBudget extends CreateRecord
@@ -26,5 +27,14 @@ class CreateBudget extends CreateRecord
                 ->label('Close')
                 ->url(BudgetResource::getUrl('index')), // 🔁 link to expenses list
         ];
+    }
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $lastBudget = Budget::latest('id')->first();
+        if ($lastBudget) {
+            $data['amount'] += $lastBudget->amount;
+        }
+        return $data;
     }
 }

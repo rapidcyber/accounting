@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ExpensesExport;
 use App\Models\Expense;
+use App\Models\Budget;
 
 class ExpenseController extends Controller
 {
@@ -26,6 +27,8 @@ class ExpenseController extends Controller
     }
 
     public function print(Request $request){
+        $budgetBalance = Budget::latest('id')->first()->amount ?? 0;
+
         // Get parameters from the request if needed
         $parameters = $request->all();
         // Fetch expenses based on parameters (customize as needed)
@@ -41,7 +44,8 @@ class ExpenseController extends Controller
         // Return a view for printing (create resources/views/expenses/print.blade.php)
         return view('expenses.print', [
             'expenses' => $expenses,
-            'parameters' => $parameters
+            'parameters' => $parameters,
+            'budgetBalance' => $budgetBalance,
         ]);
     }
 }

@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use App\Models\Budget;
 
 class ExpensesExport implements FromCollection, WithHeadings, WithEvents
 {
@@ -90,6 +91,11 @@ class ExpensesExport implements FromCollection, WithHeadings, WithEvents
 
                 $sheet->setCellValue('G' . $rowCount, 'GRAND TOTAL:');
                 $sheet->setCellValue('H' . $rowCount, $total);
+
+                // Budget balance
+                $budgetBalance = Budget::latest('id')->first()->amount ?? 0;
+                $sheet->setCellValue('A' . $rowCount, 'CHASH ON HAND:');
+                $sheet->setCellValue('B' . $rowCount, $budgetBalance);
 
                 // Insert 4 rows above
                 $sheet->insertNewRowBefore(1, 4);
