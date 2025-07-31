@@ -46,7 +46,7 @@
                 </tr>
             @endforeach
                 <tr>
-                    <td style="text-align: right; font-weight: bold;">CHASH ON HAND:</td>
+                    <td style="text-align: right; font-weight: bold;">CASH ON HAND:</td>
                     <td style="text-align: left; font-weight: bold;">{{ number_format($budgetBalance, 2)}}</td>
                     <td></td>
                     <td></td>

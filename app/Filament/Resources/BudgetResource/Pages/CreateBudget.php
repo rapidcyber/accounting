@@ -31,7 +31,7 @@ class CreateBudget extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $lastBudget = Budget::latest('id')->first();
+        $lastBudget = Budget::latest('date')->first();
         if ($lastBudget) {
             $data['amount'] += $lastBudget->amount;
         }

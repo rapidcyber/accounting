@@ -27,7 +27,7 @@ class ExpenseController extends Controller
     }
 
     public function print(Request $request){
-        $budgetBalance = Budget::latest('id')->first()->amount ?? 0;
+        $budgetBalance = Budget::latest('date')->first()->amount ?? 0;
 
         // Get parameters from the request if needed
         $parameters = $request->all();

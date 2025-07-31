@@ -143,7 +143,7 @@ class ExpenseResource extends Resource
                 //Budget Balance display
                 Action::make('budgetBalance')
                     ->label(function () {
-                        $budgetBalance = Budget::latest()->first()->amount ?? 0;
+                        $budgetBalance = Budget::latest('date')->first()->amount ?? 0;
                         return 'Budget Balance: '. number_format($budgetBalance, 2);
                     })
                     ->disabled()
@@ -306,7 +306,7 @@ class ExpenseResource extends Resource
                             $expenses = $expenses->whereBetween('date', array_values($params));
                         }
 
-                        return view('components.report', ['expenses' => $expenses, 'budgetBalance' => Budget::latest()->first()->amount ?? 0]);
+                        return view('components.report', ['expenses' => $expenses, 'budgetBalance' => Budget::latest('date')->first()->amount ?? 0]);
                     }),
 
             ])
