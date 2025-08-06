@@ -63,7 +63,7 @@ class VoucherResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('Description')
+                Tables\Columns\TextColumn::make('expenses.description')
                     ->label('Expenses')
                     ->getStateUsing(function ($record) {
                         $expenses = [];
@@ -75,8 +75,8 @@ class VoucherResource extends Resource
 
                         return implode(', ', $expenses);
                     })
-                    ->numeric()
-                    ->sortable(),
+                    ->searchable(true)
+                    ->sortable(false),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('total_amount')
@@ -86,7 +86,7 @@ class VoucherResource extends Resource
                     })
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('deleted_at')
+                Tables\Columns\TextColumn::make('date')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
