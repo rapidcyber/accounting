@@ -5,7 +5,7 @@
                 <tr>
                     <td style="border:none;"><img src="{{ asset('/images/sp_logo.png') }}" width="80" height="80" alt="Logo"></td>
                     <td style="border:none;text-align:center">
-                        <h1 style="font-size: 24px; font-weight:bold"><u>PETTY CASH VOUCHER</u></h1>
+                        <h1 style="font-size: 16px; font-weight:bold"><u>PETTY CASH VOUCHER</u></h1>
                         {{-- <p>6TH CONGRESSIONAL DISTRICT OFFICE</p>
                         <p>Dulong Bayan, Poblacion, Santa Maria, Bulacan</p> --}}
                     </td>
@@ -13,7 +13,7 @@
                         No: <strong style="color:red;text-align:center;min-width: 4rem;display:inline-block;border-bottom:1px solid black">{{str_pad($voucher->id, 4, '0', STR_PAD_LEFT)}}</strong>
                     </td>
                 </tr>
-                <tr style="font-size:20px">
+                <tr style="font-size:16px">
                     <td></td>
                     <td style="text-align:right"><b>DATE:</b></td>
                     <td style="border-bottom:1px solid black; text-align:center">{{\Carbon\Carbon::parse($voucher->date)->format('m/d/Y')}}</td>
@@ -22,7 +22,7 @@
         </div>
         <div>
             <table style="width: 100%">
-                <tr style="font-size:20px">
+                <tr style="font-size:14px">
                     <td style="width: 80%">
                         <strong>To: </strong>
                         <span style="display:inline-block; width:90%; border-bottom: 1px solid black">
@@ -34,7 +34,7 @@
             </table>
         </div>
         <div style="padding-top: 10px">
-            <table style="width:100%; border: 1px solid black; border-collapse: collapse;" cellpadding="6">
+            <table style="width:100%; border: 1px solid black; border-collapse: collapse;" cellpadding="4">
                 <thead>
                 <tr>
                     <th style="text-align: center; border: 1px solid black; width: 80%;">PARTICULARS</th>
