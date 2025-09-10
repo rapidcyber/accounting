@@ -61,7 +61,7 @@
                     @foreach($budgets as $budget)
                         <tr>
                             <td style="text-align: center">{{ \Carbon\Carbon::parse($budget->date)->format('m/d/Y') }}</td>
-                            <td>{{ $budget->description }}</td>
+                            <td>{{ $budget->description ?? 'New Budget' }}</td>
                             <td style="text-align: right"> {{ number_format($budget->amount, 2) }}</td>
                         </tr>
                     @endforeach
