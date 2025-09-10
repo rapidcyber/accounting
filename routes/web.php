@@ -6,6 +6,7 @@ use App\Livewire\Settings\Profile;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\VoucherController;
+use App\Http\Controllers\BudgetController;
 
 Route::get('/', function () {
     return redirect()->route('filament.admin.pages.dashboard');
@@ -27,6 +28,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('expenses.print');
     Route::get('vourchers/print/', [VoucherController::class, 'print'])
         ->name('vouchers.print');
+    Route::get('budgets/print/', [BudgetController::class, 'print'])
+        ->name('budgets.print');
 });
 
 require __DIR__.'/auth.php';

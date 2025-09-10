@@ -7,10 +7,13 @@ use App\Filament\Resources\BudgetResource\RelationManagers;
 use App\Models\Budget;
 use Filament\Tables\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -65,7 +68,41 @@ class BudgetResource extends Resource
                     ->searchable(),
             ])
             ->filters([
-                //
+                Filter::make('date')
+                    ->form([
+                        DatePicker::make('from'),
+                        DatePicker::make('to'),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        return $query
+                            ->when(
+                                $data['from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('date', '>=', $date),
+                            )
+                            ->when(
+                                $data['to'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('date', '<=', $date),
+                            );
+                    }),
+            ])
+            ->headerActions([
+                Action::make('print')
+                    ->label('Print')
+                    ->icon('heroicon-o-printer')
+                    ->color('success')
+                    ->url(function ($livewire) {
+                        $date = $livewire->getTable()->getFilter('date')->getState();
+
+                        $queryParams = [
+                            'date_from' => $date['from'],
+                            'date_to' => $date['to'],
+                        ];
+
+                        $query = http_build_query($queryParams);
+
+                        return route('budgets.print', [], false) . '?' . $query;
+                    })
+                    ->openUrlInNewTab(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -101,5 +138,10 @@ class BudgetResource extends Resource
             'create' => Pages\CreateBudget::route('/create'),
             'edit' => Pages\EditBudget::route('/{record}/edit'),
         ];
+    }
+
+    public static function handlePrint()
+    {
+        //
     }
 }

@@ -5,19 +5,15 @@ namespace App\View\Components;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
-use App\Models\Budget;
 
-class Report extends Component
+class Budget extends Component
 {
-    public $expenses;
-    public $budgetBalance;
     /**
      * Create a new component instance.
      */
-    public function __construct($expenses)
+    public function __construct()
     {
-        $this->expenses = json_decode($expenses);
-        $this->budgetBalance = Budget::latest('id')->first()->amount ?? 0;
+        //
     }
 
     /**
@@ -25,6 +21,6 @@ class Report extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.report');
+        return view('components.budget');
     }
 }

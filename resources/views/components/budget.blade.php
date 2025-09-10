@@ -6,7 +6,7 @@
                 <td style="border:none;text-align:center">
                     <p>6TH CONGRESSIONAL DISTRICT OFFICE</p>
                     <p>Dulong Bayan, Poblacion, Santa Maria, Bulacan</p>
-                    <p>EXPENSES AS {{now()->format('F, Y')}}</p>
+                    <p>BUDGET FROM {{\Carbon\Carbon::parse($bugets->first()->date)->format('m/d/Y')}} TO {{\Carbon\Carbon::parse($bugets->last()->date)->format('m/d/Y')}}</p>
                 </td>
                 <td style="border:none;text-align:right"><img src="{{ asset('/images/hrp_logo.png') }}" width="60" height="60" alt="Logo"></td>
             </tr>
@@ -23,37 +23,23 @@
             <tr style="background-color: #e0e0e0;">
 
                 <th>DATE</th>
-                <th>QTY</th>
-                <th>UNIT</th>
                 <th>DESCRIPTION</th>
-                <th style="text-align: center">PAYMENT METHOD</th>
                 <th>AMOUNT</th>
-                <th>TOTAL AMOUNT</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($expenses as $expense)
+            @foreach($BUDGET as $expense)
                 <tr>
                     <td style="text-align: center">{{ \Carbon\Carbon::parse($expense->date)->format('m/d/Y') }}</td>
-                    <td style="text-align: center">
-                        {{ fmod($expense->quantity, 1) == 0 ? number_format($expense->quantity, 0) : $expense->quantity }}
-                    </td>
-                    <td style="text-align: center">{{ ucfirst($expense->unit) }}</td>
                     <td>{{ $expense->description }}</td>
-                    <td style="text-align: center">{{ ucfirst($expense->payment_method) }}</td>
-                    <td style="text-align: right"> {{ number_format($expense->amount, 2) }}</td>
                     <td style="text-align: right"> {{ number_format($expense->total_amount, 2) }}</td>
                 </tr>
             @endforeach
                 <tr>
-                    <td style="text-align: right; font-weight: bold;">CASH ON HAND:</td>
-                    <td style="text-align: left; font-weight: bold;">{{ number_format($budgetBalance, 2)}}</td>
-                    <td></td>
-                    <td></td>
                     <td></td>
                     <td style="text-align: right; font-weight: bold;">GRAND TOTAL: </td>
                     <td style="text-align: right; font-weight: bold;">
-                         {{ number_format($expenses->sum('total_amount'), 2) }}
+                         {{ number_format($budgets->sum('amount'), 2) }}
                     </td>
                 </tr>
         </tbody>
