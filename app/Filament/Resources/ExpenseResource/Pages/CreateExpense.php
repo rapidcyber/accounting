@@ -16,7 +16,7 @@ class CreateExpense extends CreateRecord
     public function getTitle(): string|Htmlable
     {
 
-        $budgetBalance = Budget::latest()->first()->amount ?? 0;
+        $budgetBalance = Budget::latest('date')->first()->amount ?? 0;
 
         return new HtmlString('<h1 class="fi-header-heading text-2xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-3xl">Create Expense</h1><p>Budget Balance: <strong style="color:red">' . number_format($budgetBalance, 2) . '</strong></p>');
     }
@@ -41,7 +41,7 @@ class CreateExpense extends CreateRecord
 
     protected function beforeCreate(): void
     {
-        $latestBudget = Budget::latest()->first();
+        $latestBudget = Budget::latest('date')->first();
         $expenseAmount = $this->data['amount'] ?? 0;
 
         if (!$latestBudget || $latestBudget->amount < $expenseAmount) {
@@ -58,7 +58,7 @@ class CreateExpense extends CreateRecord
     protected function afterCreate(): void
     {
         // You can use a notification instead of dd() for better UX
-        $latestBudget = Budget::latest()->first();
+        $latestBudget = Budget::latest('date')->first();
         if ($latestBudget) {
 
             $newBudgetAmount = $latestBudget->amount - ($this->data['total_amount'] ?? 0);

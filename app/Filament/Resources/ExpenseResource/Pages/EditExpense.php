@@ -15,7 +15,7 @@ class EditExpense extends EditRecord
     public function getTitle(): string|Htmlable
     {
         // dd($this->record->id);
-        $budgetBalance = $this->record->budgets->first()->amount ?? 0;
+        $budgetBalance = $this->record->budgets->sortByDesc('asc')->first()->amount ?? 0;
 
         return new HtmlString('<h1 class="fi-header-heading text-2xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-3xl">Edit Expense</h1><p>Budget Balance: <strong style="color:red">' . number_format($budgetBalance, 2) . '</strong></p>');
     }
