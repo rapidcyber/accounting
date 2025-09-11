@@ -13,11 +13,12 @@ class BudgetController extends Controller
     {
         $param = $request->all();
         $budgets = Budget::all();
-        $dateTo = Carbon::parse($param['date_to'])->addDay();
+        $dateFrom = Carbon::parse($param['date_from']);
+        $dateTo = Carbon::parse($param['date_to']);
 
 
         if(!empty($param['date_from']) && !empty($param['date_to'])) {
-            $budgets = Budget::whereBetween('date', [Carbon::parse($param['date_from']), $dateTo])->orderBy('date', 'asc')->get();
+            $budgets = Budget::whereDate('date', '>=', $dateFrom)->whereDate('date', '<=', $dateTo)->orderBy('date', 'asc')->get();
         }
 
         return view('budgets.print', compact('budgets'));
