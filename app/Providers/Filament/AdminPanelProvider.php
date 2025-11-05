@@ -19,6 +19,8 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\MenuItem;
 use App\Filament\Pages\ProfileSettings;
+use App\Filament\Pages\Dashboard;
+use Illuminate\Support\Facades\App;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -47,15 +49,16 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->path('admin')
             ->pages([
-                Pages\Dashboard::class,
+                Dashboard::class,
                 ProfileSettings::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                \App\Filament\Resources\ExpenseResource\Widgets\StatsOverview::class,
-                Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
-            ])
+            // ->widgets([
+            //     \App\Filament\Resources\ExpenseResource\Widgets\StatsOverview::class,
+            //     Widgets\AccountWidget::class,
+            //     \App\Filament\Widgets\RecentActivityLog::class,
+            //     // Widgets\FilamentInfoWidget::class,
+            // ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
