@@ -107,6 +107,8 @@ class ExpenseResource extends Resource
                 TextColumn::make('description')
                     ->label('Description')
                     ->searchable()
+                    ->limit(30)
+                    ->tooltip(fn ($record) => $record->description)
                     ->sortable(),
                 TextColumn::make('amount')
                     ->label('Amount')
