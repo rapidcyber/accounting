@@ -67,7 +67,7 @@ class CreateExpense extends CreateRecord
                 [
                     'amount' => $newBudgetAmount,
                     'date' => now(),
-                    'description' => 'Budget updated after expense creation'
+                    'description' => 'Budget updated after expense creation id: '. $this->record->id
                 ]
             );
 

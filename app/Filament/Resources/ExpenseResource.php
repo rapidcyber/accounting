@@ -102,6 +102,8 @@ class ExpenseResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('id')
+                    ->sortable(),
                 TextColumn::make('description')
                     ->label('Description')
                     ->searchable()
@@ -112,7 +114,7 @@ class ExpenseResource extends Resource
                     ->sortable(),
                 TextColumn::make('date')
                     ->label('Date')
-                    ->date()
+                    ->date('M d, Y')
                     ->sortable(),
                 TextColumn::make('quantity')
                     ->label('Quantity')

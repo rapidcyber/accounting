@@ -56,9 +56,11 @@ class BudgetResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('amount')
                     ->sortable()
+                    ->numeric()
+                    ->formatStateUsing(fn ($state) => number_format($state, 2)) // Formats as 1,234.56
                     ->searchable(),
                 Tables\Columns\TextColumn::make('date')
-                    ->dateTime('F d, Y h:i A')
+                    ->dateTime('M d, Y h:i A')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('description')
