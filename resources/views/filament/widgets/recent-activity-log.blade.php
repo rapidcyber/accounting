@@ -13,8 +13,8 @@
             @endforeach
         </ul>
 
-        <div class="mt-4">
-            {{ $this->getPaginatedRecords()->links() }}
+        <div class="pt-4 w-full">
+            <x-filament::pagination :paginator="$this->getPaginatedRecords()" />
         </div>
     </x-filament::section>
 </x-filament-widgets::widget>
