@@ -401,6 +401,8 @@ class ExpenseResource extends Resource
                         }),
                 ]),
             ])
+            ->paginated([10, 25, 50, 100])
+            ->deferLoading()
             ->defaultSort('created_at', 'desc');
     }
 

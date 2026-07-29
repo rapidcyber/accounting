@@ -1,5 +1,7 @@
 <?php
 
+ini_set('memory_limit', '512M'); // Increase memory limit
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
