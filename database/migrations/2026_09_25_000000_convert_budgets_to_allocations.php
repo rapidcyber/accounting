@@ -30,6 +30,14 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Drop the pivot's foreign keys first: MySQL keeps constraint names on
+        // rename, and the old names would block ever creating a table called
+        // budget_expense again (e.g. when re-importing an old database dump).
+        Schema::table('budget_expense', function (Blueprint $table) {
+            $table->dropForeign(['budget_id']);
+            $table->dropForeign(['expense_id']);
+        });
+
         Schema::rename('budget_expense', 'legacy_budget_expense');
         Schema::rename('budgets', 'legacy_budget_snapshots');
 
@@ -105,5 +113,10 @@ return new class extends Migration
         Schema::dropIfExists('budgets');
         Schema::rename('legacy_budget_snapshots', 'budgets');
         Schema::rename('legacy_budget_expense', 'budget_expense');
+
+        Schema::table('budget_expense', function (Blueprint $table) {
+            $table->foreign('budget_id')->references('id')->on('budgets')->cascadeOnDelete();
+            $table->foreign('expense_id')->references('id')->on('expenses')->cascadeOnDelete();
+        });
     }
 };
