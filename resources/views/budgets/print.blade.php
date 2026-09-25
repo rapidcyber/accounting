@@ -36,7 +36,9 @@
                     <td style="border:none;text-align:center">
                         <p>6TH CONGRESSIONAL DISTRICT OFFICE</p>
                         <p>Dulong Bayan, Poblacion, Santa Maria, Bulacan</p>
+                        @if($budgets->isNotEmpty())
                         <p>BUDGET FROM {{\Carbon\Carbon::parse($budgets->first()->date)->format('m/d/Y')}} TO {{\Carbon\Carbon::parse($budgets->last()->date)->format('m/d/Y')}}</p>
+                        @endif
                     </td>
                     <td style="border:none;text-align:right"><img src="{{ asset('/images/hrp_logo.png') }}" width="60" height="60" alt="Logo"></td>
                 </tr>

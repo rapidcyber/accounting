@@ -14,9 +14,7 @@ class EditBudget extends EditRecord
     {
         return [
             Actions\DeleteAction::make()
-            ->before(function () {
-                $this->record->expenses()->detach();
-            }),
+                ->modalDescription('Deleting this entry removes its amount from the cash on hand.'),
         ];
     }
 }

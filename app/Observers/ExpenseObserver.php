@@ -59,6 +59,6 @@ class ExpenseObserver
         activity()
             ->performedOn($expense)
             ->causedBy(Auth::user())
-            ->log('Restored an expense');
+            ->log('Permanently deleted an expense');
     }
 }

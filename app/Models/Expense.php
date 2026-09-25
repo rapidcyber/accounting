@@ -14,8 +14,25 @@ class Expense extends Model
         return $this->belongsToMany(Voucher::class);
     }
 
-    public function budgets()
+    /**
+     * Sum of all expenses that are not deleted.
+     */
+    public static function totalSpent(): float
     {
-        return $this->belongsToMany(Budget::class);
+        return (float) static::query()->sum('total_amount');
+    }
+
+    /**
+     * Total of an expense from raw form values, using the same formula as the
+     * total_amount database column (amount * quantity - discount + tax).
+     */
+    public static function computeTotal(array $data): float
+    {
+        return round(
+            (float) ($data['amount'] ?? 0) * (float) ($data['quantity'] ?? 0)
+            - (float) ($data['discount'] ?? 0)
+            + (float) ($data['tax'] ?? 0),
+            2
+        );
     }
 }

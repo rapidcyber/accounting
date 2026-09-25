@@ -6,6 +6,7 @@ use App\Filament\Resources\ExpenseResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use App\Models\Budget;
+use App\Models\Expense;
 use Illuminate\Support\HtmlString;
 use Illuminate\Contracts\Support\Htmlable;
 
@@ -16,7 +17,7 @@ class CreateExpense extends CreateRecord
     public function getTitle(): string|Htmlable
     {
 
-        $budgetBalance = Budget::latest('date')->first()->amount ?? 0;
+        $budgetBalance = Budget::balance();
 
         return new HtmlString('<h1 class="fi-header-heading text-2xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-3xl">Create Expense</h1><p>Budget Balance: <strong style="color:red">' . number_format($budgetBalance, 2) . '</strong></p>');
     }
@@ -41,58 +42,29 @@ class CreateExpense extends CreateRecord
 
     protected function beforeCreate(): void
     {
-        $latestBudget = Budget::latest('date')->first();
-        $expenseAmount = $this->data['amount'] ?? 0;
+        // Check the full total (amount x quantity), not just the unit amount.
+        $total = Expense::computeTotal($this->data);
+        $balance = Budget::balance();
 
-        if (!$latestBudget || $latestBudget->amount < $expenseAmount) {
+        if ($total > $balance) {
             \Filament\Notifications\Notification::make()
                 ->title('Insufficient budget!')
                 ->danger()
-                ->body('The budget is not enough to cover this expense.')
+                ->body('This expense (' . number_format($total, 2) . ') is more than the budget balance (' . number_format($balance, 2) . ').')
                 ->send();
 
             $this->halt();
         }
     }
 
-    protected function afterCreate(): void
+    protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // You can use a notification instead of dd() for better UX
-        $latestBudget = Budget::latest('date')->first();
-        if ($latestBudget) {
+        $data['created_by'] = auth()->id();
+        $data['updated_by'] = auth()->id();
 
-            $newBudgetAmount = $latestBudget->amount - ($this->data['total_amount'] ?? 0);
-
-            $newBudget = new Budget(
-                [
-                    'amount' => $newBudgetAmount,
-                    'date' => now(),
-                    'description' => 'Budget updated after expense creation id: '. $this->record->id
-                ]
-            );
-
-            if ($newBudget->save()) {
-                $newBudget->expenses()->attach($this->record->id);
-                 \Filament\Notifications\Notification::make()
-                    ->title('Expense created successfully!')
-                    ->success()
-                    ->send();
-                \Filament\Notifications\Notification::make()
-                    ->title('Budget updated successfully!')
-                    ->success()
-                    ->body('New budget created with updated amount.')
-                    ->send();
-
-            } else {
-                \Filament\Notifications\Notification::make()
-                    ->title('Budget update failed!')
-                    ->danger()
-                    ->body('There was an issue updating the budget.')
-                    ->send();
-            }
-        }
-
-
-
+        return $data;
     }
+
+    // No afterCreate budget bookkeeping: the balance is calculated from the
+    // expenses themselves, so a new expense is deducted automatically.
 }

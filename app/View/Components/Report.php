@@ -17,7 +17,7 @@ class Report extends Component
     public function __construct($expenses)
     {
         $this->expenses = json_decode($expenses);
-        $this->budgetBalance = Budget::latest('id')->first()->amount ?? 0;
+        $this->budgetBalance = Budget::balance();
     }
 
     /**

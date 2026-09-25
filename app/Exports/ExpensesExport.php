@@ -93,7 +93,7 @@ class ExpensesExport implements FromCollection, WithHeadings, WithEvents
                 $sheet->setCellValue('H' . $rowCount, $total);
 
                 // Budget balance
-                $budgetBalance = Budget::latest('date')->first()->amount ?? 0;
+                $budgetBalance = Budget::balance();
                 $sheet->setCellValue('A' . $rowCount, 'CASH ON HAND:');
                 $sheet->setCellValue('B' . $rowCount, $budgetBalance);
 

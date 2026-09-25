@@ -28,13 +28,4 @@ class CreateBudget extends CreateRecord
                 ->url(BudgetResource::getUrl('index')), // 🔁 link to expenses list
         ];
     }
-
-    protected function mutateFormDataBeforeCreate(array $data): array
-    {
-        $lastBudget = Budget::orderBy('date', 'desc')->first();
-        if ($lastBudget) {
-            $data['amount'] += $lastBudget->amount;
-        }
-        return $data;
-    }
 }

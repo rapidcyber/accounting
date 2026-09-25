@@ -15,7 +15,7 @@ class StatsOverview extends BaseWidget
         return [
             Stat::make('Expenses Grand Total', '₱' . number_format(Expense::sum('total_amount'), 2)),
             Stat::make('Created Vouchers', Voucher::all()->count()),
-            Stat::make('Cash on Hand','₱' . number_format(Budget::latest()->first()->amount, 2)),
+            Stat::make('Cash on Hand','₱' . number_format(Budget::balance(), 2)),
         ];
     }
 }

@@ -34,16 +34,19 @@ class BudgetResource extends Resource
                 Forms\Components\TextInput::make('amount')
                     ->required()
                     ->numeric()
+                    ->minValue(0.01)
                     ->maxValue(9999999999)
-                    ->default(100000.00)
-                    ->label('Budget Amount'),
+                    ->label('Amount Added')
+                    ->helperText('Enter only the money being added. The cash on hand is calculated automatically.'),
                 Forms\Components\DateTimePicker::make('date')
                     ->required()
                     ->default(now())
                     ->label('Budget Date'),
                 Forms\Components\Textarea::make('description')
                     ->nullable()
-                    ->label('Description')
+                    ->label('Description'),
+                Forms\Components\Hidden::make('created_by')
+                    ->default(fn () => auth()->id()),
             ])->columns(2);
     }
 
@@ -55,6 +58,7 @@ class BudgetResource extends Resource
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('amount')
+                    ->label('Amount Added')
                     ->sortable()
                     ->numeric()
                     ->formatStateUsing(fn ($state) => number_format($state, 2)) // Formats as 1,234.56
@@ -88,6 +92,11 @@ class BudgetResource extends Resource
                     }),
             ])
             ->headerActions([
+                Action::make('cashOnHand')
+                    ->label(fn () => 'Cash on Hand: ' . number_format(Budget::balance(), 2))
+                    ->disabled()
+                    ->icon('heroicon-o-wallet')
+                    ->color('gray'),
                 Action::make('print')
                     ->label('Print')
                     ->icon('heroicon-o-printer')
@@ -109,18 +118,12 @@ class BudgetResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
-                    ->before(function ($action, $record) {
-                        $record->expenses()->detach();
-                    })->requiresConfirmation(),
+                    ->modalDescription('Deleting this entry removes its amount from the cash on hand.'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->before(function ($action, $records) {
-                            foreach ($records as $record) {
-                                $record->expenses()->detach();
-                            }
-                        }),
+                        ->modalDescription('Deleting these entries removes their amounts from the cash on hand.'),
                 ]),
             ])
             ->defaultSort('date', 'desc');

@@ -11,15 +11,11 @@ class BudgetController extends Controller
 {
     public function print(Request $request)
     {
-        $param = $request->all();
-        $budgets = Budget::all();
-        $dateFrom = Carbon::parse($param['date_from']);
-        $dateTo = Carbon::parse($param['date_to']);
-
-
-        if(!empty($param['date_from']) && !empty($param['date_to'])) {
-            $budgets = Budget::whereDate('date', '>=', $dateFrom)->whereDate('date', '<=', $dateTo)->orderBy('date', 'asc')->get();
-        }
+        $budgets = Budget::query()
+            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('date', '>=', Carbon::parse($request->date_from)))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('date', '<=', Carbon::parse($request->date_to)))
+            ->orderBy('date')
+            ->get();
 
         return view('budgets.print', compact('budgets'));
     }
