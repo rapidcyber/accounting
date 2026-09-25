@@ -18,7 +18,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Money added and money spent in one list, with the balance after each entry.
+ * Money added and money spent in one list, sorted by date.
  * Built live from budgets and expenses, so it always matches them.
  */
 class BudgetHistory extends Page implements HasTable
@@ -62,12 +62,6 @@ class BudgetHistory extends Page implements HasTable
                     ->label('Spent')
                     ->alignEnd()
                     ->formatStateUsing(fn ($state) => (float) $state ? number_format($state, 2) : ''),
-                TextColumn::make('balance')
-                    ->label('Balance')
-                    ->alignEnd()
-                    ->weight('bold')
-                    ->formatStateUsing(fn ($state) => number_format($state, 2))
-                    ->color(fn ($state) => (float) $state < 0 ? 'danger' : null),
             ])
             ->defaultSort('position', 'desc')
             ->filters([

@@ -236,16 +236,12 @@ test('adding a budget stores only the amount added', function () {
 });
 
 test('budget history lists money added and spent with a running balance that matches cash on hand', function () {
-    // Recorded in this order (the history follows recording order).
-    $this->travelTo('2026-09-01 08:00:00');
+    // Recorded out of order on purpose: the history follows each entry's date.
+    $this->travelTo('2026-09-05 08:00:00');
+    addExpense($this->user, 500, 2, '2026-09-03');   // entered late
     addBudget(10000, '2026-09-01 08:00:00');
-    $this->travelTo('2026-09-02 08:00:00');
     $old = addExpense($this->user, 3000, 1, '2026-09-02');
-    $this->travelTo('2026-09-03 08:00:00');
-    addExpense($this->user, 500, 2, '2026-09-03');
-    $this->travelTo('2026-09-03 09:00:00');
-    addBudget(5000, '2026-09-03 09:00:00');
-    $this->travelTo('2026-09-04 08:00:00');
+    addBudget(5000, '2026-09-03 09:00:00');           // same day as an expense: listed first
     $deleted = addExpense($this->user, 700, 1, '2026-09-04');
     $deleted->delete();
 
@@ -253,8 +249,9 @@ test('budget history lists money added and spent with a running balance that mat
 
     $rows = \App\Models\LedgerEntry::query()->orderBy('position')->get();
 
-    expect($rows->pluck('entry_type')->all())->toBe(['budget', 'expense', 'expense', 'budget'])
-        ->and($rows->pluck('balance')->map(fn ($b) => (float) $b)->all())->toBe([10000.0, 9000.0, 8000.0, 13000.0])
+    expect($rows->map(fn ($r) => $r->entry_date->toDateString())->all())->toBe(['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-03'])
+        ->and($rows->pluck('entry_type')->all())->toBe(['budget', 'expense', 'budget', 'expense'])
+        ->and($rows->pluck('balance')->map(fn ($b) => (float) $b)->all())->toBe([10000.0, 9000.0, 14000.0, 13000.0])
         ->and((float) $rows->last()->balance)->toBe(Budget::balance());
 });
 
@@ -282,4 +279,18 @@ test('budget history print heading shows the selected dates', function () {
     $this->get(route('budgets.print', ['date_from' => '2026-09-01', 'date_to' => '2026-09-30']))
         ->assertOk()
         ->assertSee('BUDGET HISTORY FROM 09/01/2026 TO 09/30/2026');
+});
+
+test('budget history print shows brought forward, totals and ending balance for the dates', function () {
+    addBudget(10000, '2026-08-20 08:00:00');
+    addExpense($this->user, 2000, 1, '2026-08-25');
+    addBudget(5000, '2026-09-01 08:00:00');
+    addExpense($this->user, 1500, 1, '2026-09-10');
+    addExpense($this->user, 300, 1, '2026-10-02'); // after the period
+    $this->actingAs($this->user);
+
+    $this->get(route('budgets.print', ['date_from' => '2026-09-01', 'date_to' => '2026-09-30']))
+        ->assertOk()
+        ->assertSeeInOrder(['BALANCE BROUGHT FORWARD', '8,000.00', '5,000.00', '1,500.00', 'TOTAL:', '5,000.00', '1,500.00', 'ENDING BALANCE AS OF 09/30/2026:', '11,500.00'])
+        ->assertDontSee('Balance</th>', false);
 });

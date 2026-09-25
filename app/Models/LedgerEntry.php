@@ -8,8 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Read-only budget history: every budget added (money in) and every expense
- * that is not deleted (money out), in the order they were recorded, with a
- * running balance.
+ * that is not deleted (money out), in date order, with a running balance.
  *
  * It is built live from the budgets and expenses tables on every request, so it
  * can never fall out of sync with them. The last running balance always equals
@@ -61,10 +60,9 @@ class LedgerEntry extends Model
 
         $all = $budgets->unionAll($expenses);
 
-        // Entries run in the order they were recorded (as the old history did),
-        // not by the date typed on them: expenses are often entered days
-        // later, together with the money that paid for them.
-        $order = 'recorded_at, type_order, source_id';
+        // Entries run by their date. On the same day, money added comes before
+        // that day's expenses; ties are broken by when they were recorded.
+        $order = 'entry_date, type_order, recorded_at, source_id';
 
         $key = DB::connection()->getDriverName() === 'sqlite'
             ? "entry_type || '-' || source_id"

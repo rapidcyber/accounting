@@ -57,34 +57,32 @@
                         <th>DESCRIPTION</th>
                         <th>ADDED</th>
                         <th>SPENT</th>
-                        <th>BALANCE</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if($entries->isNotEmpty())
-                        <tr>
-                            <td></td>
-                            <td style="font-weight: bold;">BALANCE BROUGHT FORWARD</td>
-                            <td></td>
-                            <td></td>
-                            <td style="text-align: right; font-weight: bold;">{{ number_format($entries->first()->balance - $entries->first()->money_in + $entries->first()->money_out, 2) }}</td>
-                        </tr>
-                    @endif
+                    <tr>
+                        <td></td>
+                        <td style="font-weight: bold;">BALANCE BROUGHT FORWARD</td>
+                        <td colspan="2" style="text-align: right; font-weight: bold;">{{ number_format($broughtForward, 2) }}</td>
+                    </tr>
                     @foreach($entries as $entry)
                         <tr>
                             <td style="text-align: center">{{ $entry->entry_date->format('m/d/Y') }}</td>
                             <td>{{ $entry->description }}</td>
                             <td style="text-align: right">{{ (float) $entry->money_in ? number_format($entry->money_in, 2) : '' }}</td>
                             <td style="text-align: right">{{ (float) $entry->money_out ? number_format($entry->money_out, 2) : '' }}</td>
-                            <td style="text-align: right">{{ number_format($entry->balance, 2) }}</td>
                         </tr>
                     @endforeach
                     <tr>
                         <td></td>
-                        <td style="text-align: right; font-weight: bold;">TOTAL: </td>
-                        <td style="text-align: right; font-weight: bold;">{{ number_format($entries->sum('money_in'), 2) }}</td>
-                        <td style="text-align: right; font-weight: bold;">{{ number_format($entries->sum('money_out'), 2) }}</td>
-                        <td style="text-align: right; font-weight: bold;">{{ number_format(optional($entries->last())->balance ?? 0, 2) }}</td>
+                        <td style="text-align: right; font-weight: bold;">TOTAL:</td>
+                        <td style="text-align: right; font-weight: bold;">{{ number_format($totalAdded, 2) }}</td>
+                        <td style="text-align: right; font-weight: bold;">{{ number_format($totalSpent, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="text-align: right; font-weight: bold;">ENDING BALANCE{{ $dateTo ? ' AS OF ' . $dateTo->format('m/d/Y') : '' }}:</td>
+                        <td colspan="2" style="text-align: right; font-weight: bold;">{{ number_format($endingBalance, 2) }}</td>
                     </tr>
                 </tbody>
             </table>

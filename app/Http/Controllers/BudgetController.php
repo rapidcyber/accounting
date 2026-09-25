@@ -6,20 +6,33 @@ use App\Models\LedgerEntry;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class BudgetController extends Controller
 {
     public function print(Request $request)
     {
+        $from = $request->filled('date_from') ? Carbon::parse($request->date_from)->startOfDay() : null;
+        $to = $request->filled('date_to') ? Carbon::parse($request->date_to)->startOfDay() : null;
+
         $entries = LedgerEntry::query()
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('entry_date', '>=', Carbon::parse($request->date_from)))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('entry_date', '<=', Carbon::parse($request->date_to)))
+            ->when($from, fn ($q) => $q->whereDate('entry_date', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('entry_date', '<=', $to))
             ->orderBy('position')
             ->get();
 
-        $dateFrom = $request->filled('date_from') ? Carbon::parse($request->date_from) : $entries->min('entry_date');
-        $dateTo = $request->filled('date_to') ? Carbon::parse($request->date_to) : $entries->max('entry_date');
+        // Balance on the morning of the first day: everything dated before it.
+        $broughtForward = $from
+            ? (float) LedgerEntry::query()->whereDate('entry_date', '<', $from)->sum(DB::raw('money_in - money_out'))
+            : 0.0;
 
-        return view('budgets.print', compact('entries', 'dateFrom', 'dateTo'));
+        $totalAdded = (float) $entries->sum('money_in');
+        $totalSpent = (float) $entries->sum('money_out');
+        $endingBalance = round($broughtForward + $totalAdded - $totalSpent, 2);
+
+        $dateFrom = $from ?? $entries->min('entry_date');
+        $dateTo = $to ?? $entries->max('entry_date');
+
+        return view('budgets.print', compact('entries', 'dateFrom', 'dateTo', 'broughtForward', 'totalAdded', 'totalSpent', 'endingBalance'));
     }
 }
