@@ -44,7 +44,7 @@ class ExpensesExport implements FromCollection, WithHeadings, WithEvents
             fn ($query, $dateTo) => $query->whereDate('date', '<=', $dateTo)
         );
 
-        return $expenses->get();
+        return $expenses->orderBy('expenses.date')->orderBy('id')->get();
     }
     /**
      * Define the headings for the export.

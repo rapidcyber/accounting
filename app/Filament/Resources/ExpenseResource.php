@@ -204,7 +204,7 @@ class ExpenseResource extends Resource
 
                     ->modalContent(function ($livewire) {
                         $range = ExpensePeriod::fromTable($livewire);
-                        $expenses = ExpensePeriod::apply(Expense::query(), $range)->orderBy('date')->get();
+                        $expenses = ExpensePeriod::apply(Expense::query(), $range)->orderBy('date')->orderBy('id')->get();
 
                         return view('components.report', ['expenses' => $expenses, 'budgetBalance' => Budget::balance()]);
                     }),
@@ -242,7 +242,7 @@ class ExpenseResource extends Resource
             ])
             ->paginated([10, 25, 50, 100])
             ->deferLoading()
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort(fn (Builder $query) => $query->orderByDesc('date')->orderByDesc('id'));
     }
 
     /**

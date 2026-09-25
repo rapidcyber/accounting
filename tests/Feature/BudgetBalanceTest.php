@@ -333,3 +333,22 @@ test('the chosen expense date is spelled out and old dates are flagged', functio
         ->and(\App\Filament\Resources\ExpenseResource::describeDate('2026-09-22'))->toBe('Tuesday, September 22, 2026 (3 days ago)')
         ->and(\App\Filament\Resources\ExpenseResource::describeDate('2026-02-19'))->toContain('please double-check');
 });
+
+test('expenses are listed by date, not by when they were entered', function () {
+    $this->travelTo('2026-09-20 09:00:00');
+    addBudget(10000);
+    $late = addExpense($this->user, 100, 1, '2026-09-02');   // entered last, dated earliest
+    $this->travelTo('2026-09-10 09:00:00');
+    $middle = addExpense($this->user, 200, 1, '2026-09-10');
+    $this->travelTo('2026-09-05 09:00:00');
+    $first = addExpense($this->user, 300, 1, '2026-09-18');
+    $this->travelTo('2026-09-25 10:00:00');
+    $this->actingAs($this->user);
+
+    Livewire::test(\App\Filament\Resources\ExpenseResource\Pages\ListExpenses::class)
+        ->loadTable()
+        ->assertCanSeeTableRecords([$first, $middle, $late], inOrder: true);
+
+    $export = (new \App\Exports\ExpensesExport(['date_from' => '2026-09-01', 'date_to' => '2026-09-30']))->collection();
+    expect($export->pluck('id')->all())->toBe([$late->id, $middle->id, $first->id]);
+})->skip(fn () => \Illuminate\Support\Facades\DB::connection()->getDriverName() === 'sqlite', 'Excel export uses MySQL DATE_FORMAT');

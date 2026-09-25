@@ -36,7 +36,7 @@ class ExpenseController extends Controller
         $expenses = ExpensePeriod::apply(Expense::query(), [
             'date_from' => $parameters['date_from'] ?? null,
             'date_to' => $parameters['date_to'] ?? null,
-        ])->orderBy('date')->get();
+        ])->orderBy('date')->orderBy('id')->get();
 
         // Return a view for printing (create resources/views/expenses/print.blade.php)
         return view('expenses.print', [
