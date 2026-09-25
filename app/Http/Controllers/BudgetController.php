@@ -17,6 +17,9 @@ class BudgetController extends Controller
             ->orderBy('position')
             ->get();
 
-        return view('budgets.print', compact('entries'));
+        $dateFrom = $request->filled('date_from') ? Carbon::parse($request->date_from) : $entries->min('entry_date');
+        $dateTo = $request->filled('date_to') ? Carbon::parse($request->date_to) : $entries->max('entry_date');
+
+        return view('budgets.print', compact('entries', 'dateFrom', 'dateTo'));
     }
 }

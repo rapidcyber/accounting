@@ -36,8 +36,8 @@
                     <td style="border:none;text-align:center">
                         <p>6TH CONGRESSIONAL DISTRICT OFFICE</p>
                         <p>Dulong Bayan, Poblacion, Santa Maria, Bulacan</p>
-                        @if($entries->isNotEmpty())
-                        <p>BUDGET HISTORY FROM {{ $entries->first()->entry_date->format('m/d/Y') }} TO {{ $entries->last()->entry_date->format('m/d/Y') }}</p>
+                        @if($dateFrom && $dateTo)
+                        <p>BUDGET HISTORY FROM {{ $dateFrom->format('m/d/Y') }} TO {{ $dateTo->format('m/d/Y') }}</p>
                         @endif
                     </td>
                     <td style="border:none;text-align:right"><img src="{{ asset('/images/hrp_logo.png') }}" width="60" height="60" alt="Logo"></td>

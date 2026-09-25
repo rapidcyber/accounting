@@ -273,3 +273,13 @@ test('budget history page and print load', function () {
         ->assertSee('Test expense')
         ->assertSee('3,800.00');
 });
+
+test('budget history print heading shows the selected dates', function () {
+    addBudget(5000, '2026-09-01 08:00:00');
+    addExpense($this->user, 1200, 1, '2026-09-03');
+    $this->actingAs($this->user);
+
+    $this->get(route('budgets.print', ['date_from' => '2026-09-01', 'date_to' => '2026-09-30']))
+        ->assertOk()
+        ->assertSee('BUDGET HISTORY FROM 09/01/2026 TO 09/30/2026');
+});
