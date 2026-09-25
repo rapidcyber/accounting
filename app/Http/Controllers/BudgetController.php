@@ -15,26 +15,24 @@ class BudgetController extends Controller
         $from = $request->filled('date_from') ? Carbon::parse($request->date_from)->startOfDay() : null;
         $to = $request->filled('date_to') ? Carbon::parse($request->date_to)->startOfDay() : null;
 
-        // A period covers what was entered (recorded) in it, listed by date.
-        // Expenses are often entered days late and paid from money added on
-        // the day they were entered, so this keeps each period's balance real.
+        // Only rows dated inside the period, listed by date.
         $entries = LedgerEntry::query()
-            ->when($from, fn ($q) => $q->where('recorded_at', '>=', $from))
-            ->when($to, fn ($q) => $q->where('recorded_at', '<', $to->copy()->addDay()))
+            ->when($from, fn ($q) => $q->whereDate('entry_date', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('entry_date', '<=', $to))
             ->orderBy('position')
             ->get();
 
-        // Balance at the start of the period: everything entered before it.
+        // Balance at the start of the first day: everything dated before it.
         $broughtForward = $from
-            ? (float) LedgerEntry::query()->where('recorded_at', '<', $from)->sum(DB::raw('money_in - money_out'))
+            ? (float) LedgerEntry::query()->whereDate('entry_date', '<', $from)->sum(DB::raw('money_in - money_out'))
             : 0.0;
 
         $totalAdded = (float) $entries->sum('money_in');
         $totalSpent = (float) $entries->sum('money_out');
         $endingBalance = round($broughtForward + $totalAdded - $totalSpent, 2);
 
-        $dateFrom = $from ?? ($entries->isNotEmpty() ? Carbon::parse($entries->min('recorded_at')) : null);
-        $dateTo = $to ?? ($entries->isNotEmpty() ? Carbon::parse($entries->max('recorded_at')) : null);
+        $dateFrom = $from ?? $entries->min('entry_date');
+        $dateTo = $to ?? $entries->max('entry_date');
 
         return view('budgets.print', compact('entries', 'dateFrom', 'dateTo', 'broughtForward', 'totalAdded', 'totalSpent', 'endingBalance'));
     }

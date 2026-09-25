@@ -72,15 +72,14 @@ class BudgetHistory extends Page implements HasTable
                 SelectFilter::make('entry_type')
                     ->label('Type')
                     ->options(['budget' => 'Budget added', 'expense' => 'Expense']),
-                // Same rule as the print: a period covers what was entered in it.
                 Filter::make('date')
                     ->form([
-                        DatePicker::make('from')->label('Entered from'),
-                        DatePicker::make('to')->label('Entered to'),
+                        DatePicker::make('from'),
+                        DatePicker::make('to'),
                     ])
                     ->query(fn (Builder $query, array $data) => $query
-                        ->when($data['from'] ?? null, fn (Builder $q, $d) => $q->whereDate('recorded_at', '>=', $d))
-                        ->when($data['to'] ?? null, fn (Builder $q, $d) => $q->whereDate('recorded_at', '<=', $d))),
+                        ->when($data['from'] ?? null, fn (Builder $q, $d) => $q->whereDate('entry_date', '>=', $d))
+                        ->when($data['to'] ?? null, fn (Builder $q, $d) => $q->whereDate('entry_date', '<=', $d))),
             ])
             ->headerActions([
                 Action::make('cashOnHand')

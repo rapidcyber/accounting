@@ -278,10 +278,10 @@ test('budget history print heading shows the selected dates', function () {
 
     $this->get(route('budgets.print', ['date_from' => '2026-09-01', 'date_to' => '2026-09-30']))
         ->assertOk()
-        ->assertSee('BUDGET HISTORY: ENTRIES MADE FROM 09/01/2026 TO 09/30/2026');
+        ->assertSee('BUDGET HISTORY FROM 09/01/2026 TO 09/30/2026');
 });
 
-test('budget history print covers entries made in the period, listed by date', function () {
+test('budget history print shows only rows dated in the period', function () {
     $this->travelTo('2026-08-20 09:00:00');
     addBudget(10000, '2026-08-20 09:00:00');
     addExpense($this->user, 2000, 1, '2026-08-25');
@@ -291,15 +291,16 @@ test('budget history print covers entries made in the period, listed by date', f
     $this->travelTo('2026-09-10 09:00:00');
     addExpense($this->user, 1500, 1, '2026-09-10');
     $this->travelTo('2026-10-02 09:00:00');
-    addExpense($this->user, 300, 1, '2026-09-30'); // entered after the period
+    addExpense($this->user, 300, 1, '2026-09-30'); // September expense entered later
     $this->actingAs($this->user);
 
     $this->get(route('budgets.print', ['date_from' => '2026-09-01', 'date_to' => '2026-09-30']))
         ->assertOk()
-        ->assertSee('ENTRIES MADE FROM 09/01/2026 TO 09/30/2026')
-        // 10,000 - 2,000 entered before September
-        ->assertSeeInOrder(['BALANCE BROUGHT FORWARD', '8,000.00', '08/31/2026', '9,000.00', '09/01/2026', '5,000.00', '09/10/2026', '1,500.00', 'TOTAL:', '5,000.00', '10,500.00', 'ENDING BALANCE AS OF 09/30/2026:', '2,500.00'])
-        ->assertDontSee('300.00');
+        ->assertSee('BUDGET HISTORY FROM 09/01/2026 TO 09/30/2026')
+        // Dated before September: 10,000 - 2,000 - 9,000
+        ->assertSeeInOrder(['BALANCE BROUGHT FORWARD', '-1,000.00', '09/01/2026', '5,000.00', '09/10/2026', '1,500.00', '09/30/2026', '300.00', 'TOTAL:', '5,000.00', '1,800.00', 'ENDING BALANCE AS OF 09/30/2026:', '2,200.00'])
+        ->assertDontSee('08/31/2026')
+        ->assertDontSee('9,000.00');
 });
 
 test('expense date is picked from a calendar and cannot be in the future', function () {
