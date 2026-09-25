@@ -12,6 +12,8 @@ use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
 use App\Filament\Resources\ExpenseResource;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +31,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::unguard();
+
+        // Pick dates from a calendar instead of typing them, so a year or
+        // month cannot be mistyped (e.g. 0002-04-15 or 09/19 instead of 02/19).
+        // (DatePicker extends DateTimePicker, so this covers both.)
+        DateTimePicker::configureUsing(fn (DateTimePicker $picker) => $picker
+            ->native(false)
+            ->displayFormat($picker instanceof DatePicker ? 'M d, Y' : 'M d, Y h:i A')
+            ->seconds(false)
+            ->firstDayOfWeek(7)
+            ->closeOnDateSelection($picker instanceof DatePicker));
         Expense::observe(ExpenseObserver::class);
         Budget::observe(BudgetObserver::class);
 

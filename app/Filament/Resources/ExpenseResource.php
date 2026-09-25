@@ -33,11 +33,13 @@ class ExpenseResource extends Resource
         return $form
             ->schema([
                 Forms\Components\DatePicker::make('date')
+                    ->label('Date of expense')
                     ->required()
                     ->default(now())
                     ->minDate('2025-01-01')
-                    ->maxDate(fn () => now()->addMonth())
-                    ->helperText('Check the year before saving.'),
+                    ->maxDate(fn () => now()->endOfDay()) // an expense cannot be in the future
+                    ->live()
+                    ->helperText(fn ($state) => static::describeDate($state)),
                 Forms\Components\TextInput::make('quantity')
                     ->label('Quantity')
                     ->numeric()           // Ensures only numbers
@@ -241,6 +243,30 @@ class ExpenseResource extends Resource
             ->paginated([10, 25, 50, 100])
             ->deferLoading()
             ->defaultSort('created_at', 'desc');
+    }
+
+    /**
+     * Spell out the chosen date so a wrong day, month or year stands out.
+     */
+    public static function describeDate($state): string
+    {
+        if (blank($state)) {
+            return 'Pick the date from the calendar.';
+        }
+
+        $date = \Illuminate\Support\Carbon::parse($state)->startOfDay();
+        $days = (int) $date->diffInDays(now()->startOfDay(), false);
+
+        $when = match (true) {
+            $days === 0 => 'today',
+            $days === 1 => 'yesterday',
+            $days > 1 => $days . ' days ago',
+            default => 'in the future',
+        };
+
+        $text = $date->format('l, F j, Y') . ' (' . $when . ')';
+
+        return $days > 31 ? $text . ' - more than a month ago, please double-check.' : $text;
     }
 
     public static function getRelations(): array

@@ -301,3 +301,35 @@ test('budget history print covers entries made in the period, listed by date', f
         ->assertSeeInOrder(['BALANCE BROUGHT FORWARD', '8,000.00', '08/31/2026', '9,000.00', '09/01/2026', '5,000.00', '09/10/2026', '1,500.00', 'TOTAL:', '5,000.00', '10,500.00', 'ENDING BALANCE AS OF 09/30/2026:', '2,500.00'])
         ->assertDontSee('300.00');
 });
+
+test('expense date is picked from a calendar and cannot be in the future', function () {
+    addBudget(1000);
+    $this->actingAs($this->user);
+
+    $component = Livewire::test(CreateExpense::class);
+    $picker = $component->instance()->form->getComponent('data.date');
+
+    expect($picker->isNative())->toBeFalse()
+        ->and($picker->getDisplayFormat())->toBe('M d, Y');
+
+    $component
+        ->fillForm([
+            'date' => now()->addDay()->toDateString(),
+            'quantity' => 1,
+            'amount' => 100,
+            'description' => 'Future',
+            'payment_method' => 'cash',
+        ])
+        ->call('create')
+        ->assertHasFormErrors(['date']);
+
+    expect(Expense::count())->toBe(0);
+});
+
+test('the chosen expense date is spelled out and old dates are flagged', function () {
+    $this->travelTo('2026-09-25 10:00:00');
+
+    expect(\App\Filament\Resources\ExpenseResource::describeDate('2026-09-25'))->toBe('Friday, September 25, 2026 (today)')
+        ->and(\App\Filament\Resources\ExpenseResource::describeDate('2026-09-22'))->toBe('Tuesday, September 22, 2026 (3 days ago)')
+        ->and(\App\Filament\Resources\ExpenseResource::describeDate('2026-02-19'))->toContain('please double-check');
+});

@@ -43,6 +43,8 @@ class BudgetResource extends Resource
                 Forms\Components\DateTimePicker::make('date')
                     ->required()
                     ->default(now())
+                    ->minDate('2025-01-01')
+                    ->maxDate(fn () => now()->endOfDay())
                     ->label('Budget Date'),
                 Forms\Components\Textarea::make('description')
                     ->nullable()
