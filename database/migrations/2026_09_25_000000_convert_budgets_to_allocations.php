@@ -22,8 +22,11 @@ use Illuminate\Support\Facades\Schema;
  *     (kept untouched for audit).
  *  2. Creates a new budgets table and fills it with the amount added by each
  *     old "top-up" row (its snapshot minus the snapshot before it).
- *  3. Adds one clearly labelled reconciliation entry so the calculated cash on
- *     hand equals the balance the app showed right before the migration.
+ *  3. Adds labelled adjustment entries, dated where they happened, for every
+ *     old balance change an expense does not explain (balances edited by hand,
+ *     expenses edited or never deducted), so the running balance in Budget
+ *     History matches what the app showed at the time and the calculated cash
+ *     on hand equals the balance shown right before the migration.
  *     Nothing shown to users changes on deploy; only future edits become correct.
  */
 return new class extends Migration
@@ -59,53 +62,93 @@ return new class extends Migration
             return;
         }
 
-        $linkedToExpense = DB::table('legacy_budget_expense')
-            ->pluck('budget_id')
-            ->flip();
+        $expenseByBudget = DB::table('legacy_budget_expense')
+            ->join('expenses', 'expenses.id', '=', 'legacy_budget_expense.expense_id')
+            ->get(['legacy_budget_expense.budget_id', 'expenses.id', 'expenses.total_amount', 'expenses.deleted_at'])
+            ->keyBy('budget_id');
 
         $previous = 0.0;
         $rows = [];
 
         foreach ($snapshots as $snapshot) {
             $amount = (float) $snapshot->amount;
+            $change = round($amount - $previous, 2);
+            $previous = $amount;
+            $expense = $expenseByBudget[$snapshot->id] ?? null;
 
-            if (! isset($linkedToExpense[$snapshot->id])) {
-                $added = round($amount - $previous, 2);
-
-                if ($added != 0.0) {
-                    $rows[] = [
-                        'amount' => $added,
-                        'date' => $snapshot->date,
-                        'description' => $snapshot->description,
-                        'created_at' => $snapshot->created_at,
-                        'updated_at' => $snapshot->updated_at,
-                    ];
+            if (! $expense) {
+                // A top-up: the money that was added.
+                if ($change != 0.0) {
+                    $rows[] = $this->entry($change, $snapshot->date, $snapshot->description, $snapshot->created_at);
                 }
+
+                continue;
             }
 
-            $previous = $amount;
+            // An expense snapshot. The expense itself is now deducted
+            // automatically (if it is not deleted), so keep only the part of
+            // the old change that the expense does not explain, e.g. a balance
+            // edited by hand or an expense edited without fixing the balance.
+            $explained = $expense->deleted_at === null ? -(float) $expense->total_amount : 0.0;
+            $unexplained = round($change - $explained, 2);
+
+            if ($unexplained != 0.0) {
+                $rows[] = $this->entry(
+                    $unexplained,
+                    $snapshot->date,
+                    'Adjustment from old balance history (expense #' . $expense->id . ')',
+                    $snapshot->created_at
+                );
+            }
+        }
+
+        // Expenses that the old balance never deducted (their snapshot row was
+        // deleted). Offset them where they happened so the history keeps the
+        // balance people saw.
+        $neverDeducted = DB::table('expenses')
+            ->whereNull('deleted_at')
+            ->whereNotIn('id', DB::table('legacy_budget_expense')->select('expense_id'))
+            ->get(['id', 'date', 'total_amount', 'created_at']);
+
+        foreach ($neverDeducted as $expense) {
+            $rows[] = $this->entry(
+                round((float) $expense->total_amount, 2),
+                $expense->date . ' 00:00:00',
+                'Adjustment: expense #' . $expense->id . ' was never deducted from the old balance',
+                $expense->created_at
+            );
         }
 
         foreach (array_chunk($rows, 500) as $chunk) {
             DB::table('budgets')->insert($chunk);
         }
 
-        // The balance users saw right before this migration.
+        // Anything still unexplained, so the balance stays exactly what users
+        // saw right before this migration.
         $shownBalance = (float) $snapshots->last()->amount;
-
         $allocated = (float) DB::table('budgets')->sum('amount');
         $spent = (float) DB::table('expenses')->whereNull('deleted_at')->sum('total_amount');
-        $adjustment = round($shownBalance - ($allocated - $spent), 2);
+        $remaining = round($shownBalance - ($allocated - $spent), 2);
 
-        if ($adjustment != 0.0) {
-            DB::table('budgets')->insert([
-                'amount' => $adjustment,
-                'date' => now(),
-                'description' => 'Reconciliation: difference from the old running balance (see legacy_budget_snapshots)',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        if ($remaining != 0.0) {
+            DB::table('budgets')->insert($this->entry(
+                $remaining,
+                now(),
+                'Reconciliation: difference from the old running balance (see legacy_budget_snapshots)',
+                now()
+            ));
         }
+    }
+
+    private function entry(float $amount, $date, ?string $description, $createdAt): array
+    {
+        return [
+            'amount' => $amount,
+            'date' => $date,
+            'description' => $description,
+            'created_at' => $createdAt ?? now(),
+            'updated_at' => $createdAt ?? now(),
+        ];
     }
 
     public function down(): void

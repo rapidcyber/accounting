@@ -10,7 +10,7 @@ class ListBudgets extends ListRecords
 {
     protected static string $resource = BudgetResource::class;
 
-    protected static ?string $title = 'Budget History'; // 🔁 Set the title for the page
+    protected static ?string $title = 'Budgets Added';
 
     protected function getHeaderActions(): array
     {

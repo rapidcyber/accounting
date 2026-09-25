@@ -180,6 +180,8 @@ test('migration keeps the balance users saw and converts top-ups to amounts adde
     $u = $this->user->id;
     $e1 = DB::table('expenses')->insertGetId(['description' => 'a', 'amount' => 300, 'date' => '2026-09-02', 'created_by' => $u, 'updated_by' => $u]);
     $e2 = DB::table('expenses')->insertGetId(['description' => 'b', 'amount' => 1000, 'date' => '2026-09-03', 'created_by' => $u, 'updated_by' => $u]);
+    // Its snapshot row was deleted, so the old balance never deducted it.
+    $e3 = DB::table('expenses')->insertGetId(['description' => 'c', 'amount' => 200, 'date' => '2026-09-03', 'created_by' => $u, 'updated_by' => $u]);
 
     // Old snapshot chain: +10,000, -300, +5,000, -10,000 (expense later edited to 1,000 without fixing the balance)
     DB::table('budgets')->insert([
@@ -197,10 +199,13 @@ test('migration keeps the balance users saw and converts top-ups to amounts adde
 
     expect(Schema::hasTable('legacy_budget_snapshots'))->toBeTrue()
         ->and(Budget::where('description', 'NEW BUDGET')->pluck('amount')->map(fn ($a) => (float) $a)->all())->toBe([10000.0, 5000.0])
-        // Shown before migration: 4,700. Correct math would be 15,000 - 1,300 = 13,700,
-        // so a -9,000 reconciliation entry keeps what users saw.
+        // Shown before migration: 4,700. Expense b now counts as 1,000 but the old
+        // balance dropped by 10,000, so a -9,000 adjustment is dated where it happened.
         ->and(Budget::balance())->toBe(4700.0)
-        ->and((float) Budget::where('description', 'like', 'Reconciliation%')->value('amount'))->toBe(-9000.0);
+        ->and((float) Budget::where('description', 'like', 'Adjustment from old balance history (expense #' . $e2 . ')')->value('amount'))->toBe(-9000.0)
+        ->and((float) Budget::where('description', 'like', 'Adjustment: expense #' . $e3 . ' %')->value('amount'))->toBe(200.0)
+        ->and(Budget::where('description', 'like', 'Reconciliation%')->exists())->toBeFalse()
+        ->and((float) \App\Models\LedgerEntry::query()->orderByDesc('position')->value('balance'))->toBe(4700.0);
 });
 
 test('expense and budget list pages load and show the calculated balance', function () {
@@ -228,4 +233,43 @@ test('adding a budget stores only the amount added', function () {
 
     expect((float) Budget::latest('id')->value('amount'))->toBe(100000.0)
         ->and(Budget::balance())->toBe(105000.0);
+});
+
+test('budget history lists money added and spent with a running balance that matches cash on hand', function () {
+    // Recorded in this order (the history follows recording order).
+    $this->travelTo('2026-09-01 08:00:00');
+    addBudget(10000, '2026-09-01 08:00:00');
+    $this->travelTo('2026-09-02 08:00:00');
+    $old = addExpense($this->user, 3000, 1, '2026-09-02');
+    $this->travelTo('2026-09-03 08:00:00');
+    addExpense($this->user, 500, 2, '2026-09-03');
+    $this->travelTo('2026-09-03 09:00:00');
+    addBudget(5000, '2026-09-03 09:00:00');
+    $this->travelTo('2026-09-04 08:00:00');
+    $deleted = addExpense($this->user, 700, 1, '2026-09-04');
+    $deleted->delete();
+
+    $old->update(['amount' => 1000]); // edit an older expense
+
+    $rows = \App\Models\LedgerEntry::query()->orderBy('position')->get();
+
+    expect($rows->pluck('entry_type')->all())->toBe(['budget', 'expense', 'expense', 'budget'])
+        ->and($rows->pluck('balance')->map(fn ($b) => (float) $b)->all())->toBe([10000.0, 9000.0, 8000.0, 13000.0])
+        ->and((float) $rows->last()->balance)->toBe(Budget::balance());
+});
+
+test('budget history page and print load', function () {
+    addBudget(5000);
+    addExpense($this->user, 1200);
+    $this->actingAs($this->user);
+
+    Livewire::test(\App\Filament\Pages\BudgetHistory::class)
+        ->assertSuccessful()
+        ->assertSee('Cash on Hand: 3,800.00')
+        ->assertSee('Test expense');
+
+    $this->get(route('budgets.print'))
+        ->assertOk()
+        ->assertSee('Test expense')
+        ->assertSee('3,800.00');
 });
