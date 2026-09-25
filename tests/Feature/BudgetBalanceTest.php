@@ -278,19 +278,26 @@ test('budget history print heading shows the selected dates', function () {
 
     $this->get(route('budgets.print', ['date_from' => '2026-09-01', 'date_to' => '2026-09-30']))
         ->assertOk()
-        ->assertSee('BUDGET HISTORY FROM 09/01/2026 TO 09/30/2026');
+        ->assertSee('BUDGET HISTORY: ENTRIES MADE FROM 09/01/2026 TO 09/30/2026');
 });
 
-test('budget history print shows brought forward, totals and ending balance for the dates', function () {
-    addBudget(10000, '2026-08-20 08:00:00');
+test('budget history print covers entries made in the period, listed by date', function () {
+    $this->travelTo('2026-08-20 09:00:00');
+    addBudget(10000, '2026-08-20 09:00:00');
     addExpense($this->user, 2000, 1, '2026-08-25');
-    addBudget(5000, '2026-09-01 08:00:00');
+    $this->travelTo('2026-09-01 09:00:00');
+    addBudget(5000, '2026-09-01 09:00:00');
+    addExpense($this->user, 9000, 1, '2026-08-31'); // August expense entered Sept 1
+    $this->travelTo('2026-09-10 09:00:00');
     addExpense($this->user, 1500, 1, '2026-09-10');
-    addExpense($this->user, 300, 1, '2026-10-02'); // after the period
+    $this->travelTo('2026-10-02 09:00:00');
+    addExpense($this->user, 300, 1, '2026-09-30'); // entered after the period
     $this->actingAs($this->user);
 
     $this->get(route('budgets.print', ['date_from' => '2026-09-01', 'date_to' => '2026-09-30']))
         ->assertOk()
-        ->assertSeeInOrder(['BALANCE BROUGHT FORWARD', '8,000.00', '5,000.00', '1,500.00', 'TOTAL:', '5,000.00', '1,500.00', 'ENDING BALANCE AS OF 09/30/2026:', '11,500.00'])
-        ->assertDontSee('Balance</th>', false);
+        ->assertSee('ENTRIES MADE FROM 09/01/2026 TO 09/30/2026')
+        // 10,000 - 2,000 entered before September
+        ->assertSeeInOrder(['BALANCE BROUGHT FORWARD', '8,000.00', '08/31/2026', '9,000.00', '09/01/2026', '5,000.00', '09/10/2026', '1,500.00', 'TOTAL:', '5,000.00', '10,500.00', 'ENDING BALANCE AS OF 09/30/2026:', '2,500.00'])
+        ->assertDontSee('300.00');
 });

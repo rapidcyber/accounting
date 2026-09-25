@@ -37,7 +37,7 @@
                         <p>6TH CONGRESSIONAL DISTRICT OFFICE</p>
                         <p>Dulong Bayan, Poblacion, Santa Maria, Bulacan</p>
                         @if($dateFrom && $dateTo)
-                        <p>BUDGET HISTORY FROM {{ $dateFrom->format('m/d/Y') }} TO {{ $dateTo->format('m/d/Y') }}</p>
+                        <p>BUDGET HISTORY: ENTRIES MADE FROM {{ $dateFrom->format('m/d/Y') }} TO {{ $dateTo->format('m/d/Y') }}</p>
                         @endif
                     </td>
                     <td style="border:none;text-align:right"><img src="{{ asset('/images/hrp_logo.png') }}" width="60" height="60" alt="Logo"></td>
@@ -54,6 +54,7 @@
                 <thead>
                     <tr style="background-color: #e0e0e0;">
                         <th>DATE</th>
+                        <th>ENTERED</th>
                         <th>DESCRIPTION</th>
                         <th>ADDED</th>
                         <th>SPENT</th>
@@ -61,26 +62,27 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td></td>
+                        <td colspan="2"></td>
                         <td style="font-weight: bold;">BALANCE BROUGHT FORWARD</td>
                         <td colspan="2" style="text-align: right; font-weight: bold;">{{ number_format($broughtForward, 2) }}</td>
                     </tr>
                     @foreach($entries as $entry)
                         <tr>
                             <td style="text-align: center">{{ $entry->entry_date->format('m/d/Y') }}</td>
+                            <td style="text-align: center">{{ \Carbon\Carbon::parse($entry->recorded_at)->format('m/d/Y') }}</td>
                             <td>{{ $entry->description }}</td>
                             <td style="text-align: right">{{ (float) $entry->money_in ? number_format($entry->money_in, 2) : '' }}</td>
                             <td style="text-align: right">{{ (float) $entry->money_out ? number_format($entry->money_out, 2) : '' }}</td>
                         </tr>
                     @endforeach
                     <tr>
-                        <td></td>
+                        <td colspan="2"></td>
                         <td style="text-align: right; font-weight: bold;">TOTAL:</td>
                         <td style="text-align: right; font-weight: bold;">{{ number_format($totalAdded, 2) }}</td>
                         <td style="text-align: right; font-weight: bold;">{{ number_format($totalSpent, 2) }}</td>
                     </tr>
                     <tr>
-                        <td></td>
+                        <td colspan="2"></td>
                         <td style="text-align: right; font-weight: bold;">ENDING BALANCE{{ $dateTo ? ' AS OF ' . $dateTo->format('m/d/Y') : '' }}:</td>
                         <td colspan="2" style="text-align: right; font-weight: bold;">{{ number_format($endingBalance, 2) }}</td>
                     </tr>

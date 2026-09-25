@@ -44,6 +44,10 @@ class BudgetHistory extends Page implements HasTable
                     ->label('Date')
                     ->date('M d, Y')
                     ->sortable(query: fn (Builder $query, string $direction) => $query->orderBy('position', $direction)),
+                TextColumn::make('recorded_at')
+                    ->label('Entered')
+                    ->date('M d, Y')
+                    ->toggleable(),
                 TextColumn::make('entry_type')
                     ->label('Type')
                     ->badge()
@@ -68,14 +72,15 @@ class BudgetHistory extends Page implements HasTable
                 SelectFilter::make('entry_type')
                     ->label('Type')
                     ->options(['budget' => 'Budget added', 'expense' => 'Expense']),
+                // Same rule as the print: a period covers what was entered in it.
                 Filter::make('date')
                     ->form([
-                        DatePicker::make('from'),
-                        DatePicker::make('to'),
+                        DatePicker::make('from')->label('Entered from'),
+                        DatePicker::make('to')->label('Entered to'),
                     ])
                     ->query(fn (Builder $query, array $data) => $query
-                        ->when($data['from'] ?? null, fn (Builder $q, $d) => $q->whereDate('entry_date', '>=', $d))
-                        ->when($data['to'] ?? null, fn (Builder $q, $d) => $q->whereDate('entry_date', '<=', $d))),
+                        ->when($data['from'] ?? null, fn (Builder $q, $d) => $q->whereDate('recorded_at', '>=', $d))
+                        ->when($data['to'] ?? null, fn (Builder $q, $d) => $q->whereDate('recorded_at', '<=', $d))),
             ])
             ->headerActions([
                 Action::make('cashOnHand')

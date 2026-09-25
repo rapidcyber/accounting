@@ -15,6 +15,8 @@ services:
   mysql:
     image: mysql:8.0
     container_name: accounting-mysql
+    # Philippine time, like the live server, so "date entered" is correct.
+    command: --default-time-zone=+08:00
     ports:
       - "3307:3306"
     environment:
