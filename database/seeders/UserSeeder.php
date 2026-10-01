@@ -12,11 +12,15 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\User::create([
+        $admin = \App\Models\User::create([
             'name' => 'Super Admin',
             'email' => 'admin@serbisyong-congpleyto.com',
             'password' => bcrypt('password'), // Change to a secure password in production
             'email_verified_at' => now()
         ]);
+
+        $admin->roles()->syncWithoutDetaching(
+            \App\Models\Role::firstOrCreate(['name' => \App\Models\Role::ADMIN], ['description' => 'Can manage users and roles'])
+        );
     }
 }

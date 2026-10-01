@@ -15,9 +15,13 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
+        $admin = User::factory()->create([
             'name' => 'Super Admin',
             'email' => 'admin@sp-accounting.com',
         ]);
+
+        $admin->roles()->syncWithoutDetaching(
+            \App\Models\Role::firstOrCreate(['name' => \App\Models\Role::ADMIN], ['description' => 'Can manage users and roles'])
+        );
     }
 }
